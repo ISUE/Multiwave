@@ -24,7 +24,7 @@ namespace GestureTests.Data
     /// <summary>
     /// Class to load the dataset. This class can also export the given dataset as '.arff' files for use in WEKA.
     /// </summary>
-    class DataLoader
+    public class DataLoader
     {
         /// <summary>
         /// Loads the gesture dataset from a given location.

@@ -1,0 +1,10 @@
+Started ActionVisualizer at 6:08:32 PM
+Detected: swipe_left
+Expected: swipe_left
+Channels: 2
+Length: 11
+Data:
+5 0 0 0 -1 -2 -6 0 0 -8 0 
+
+0 0 0 0 -1 -5 -7 -6 0 0 0 
+

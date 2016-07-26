@@ -399,7 +399,7 @@ namespace GestureTests.Data
         private GestureType ReadGestureType(string gestureName)
         {
             switch (gestureName)
-            {                
+            {
                 case "swipe_left": return GestureType.swipe_left;
                 case "swipe_right": return GestureType.swipe_right;
                 case "swipe_up": return GestureType.swipe_up;
@@ -418,14 +418,22 @@ namespace GestureTests.Data
                 case "c": return GestureType.c;
                 case "circle": return GestureType.circle;
                 case "two_handed_fb": return GestureType.two_handed_fb;
-                case "two_handed_lr": return GestureType.two_handed_lr;        
+                case "two_handed_lr": return GestureType.two_handed_lr;
                 case "horizontal_circle": return GestureType.horizontal_circle;
                 case "vertical_circle": return GestureType.vertical_circle;
                 case "spiral": return GestureType.spiral;
-                case "arm_lift": return GestureType.arm_lift;
-                case "arm_drop": return GestureType.arm_drop;
+                case "arm_lift": return GestureType.arm_lift;                
                 case "triangle": return GestureType.triangle;
-                case "z": return GestureType.z;
+                case "z": return GestureType.z;                                
+                case "side_x": return GestureType.side_x;
+                case "rectangle": return GestureType.rectangle;                
+                case "check": return GestureType.check;
+                case "caret": return GestureType.caret;
+                case "zigzag": return GestureType.zigzag;
+                case "arrow": return GestureType.arrow;
+                case "left_bracket": return GestureType.left_bracket;
+                case "right_bracket": return GestureType.right_bracket;
+                case "star": return GestureType.star;                
             }
 
             return GestureType.unknown;

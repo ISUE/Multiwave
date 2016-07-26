@@ -20,7 +20,7 @@ sensing devices for video games, Entertainment Computing, Volume 4, Issue 1, Feb
 namespace GestureTests.Util
 {
     /// <summary>
-    /// A 3D vector.
+    /// A 2D vector.
     /// </summary>
     public class Vector2
     {
@@ -48,9 +48,32 @@ namespace GestureTests.Util
             return new Vector2(v1.X - v2.X, v1.Y - v2.Y);
         }
 
+        public static Vector2 operator /(Vector2 v1, float f)
+        {
+            return new Vector2(v1.X/f, v1.Y/f);
+        }
+        public static Vector2 operator *(Vector2 v1, float f)
+        {
+            return new Vector2(v1.X * f, v1.Y * f);
+        }
+
+        public static float operator *(Vector2 v1, Vector2 v2)
+        {
+            return v1.X * v2.X + v1.Y * v2.Y;
+        }
+
         public float LengthSquared()
         {
             return X * X + Y * Y;
+        }
+
+        public float Magnitude()
+        {
+            return (float)Math.Sqrt(LengthSquared());
+        }
+        public Vector2 Normalize()
+        {
+            return this/Magnitude();
         }
     }
 }

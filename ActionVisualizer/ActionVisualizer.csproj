@@ -155,8 +155,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="ComplexGesture.cs" />
-    <Compile Include="ModelingHelper.cs" />
+    <Compile Include="JackKnife.cs" />
     <Compile Include="SimpleKalman.cs" />
     <Compile Include="SineWaveProvider32.cs" />
     <Compile Include="WekaHelper.cs" />

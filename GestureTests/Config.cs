@@ -116,46 +116,39 @@ namespace GestureTests
         {
             if (Use3DMode == false)
             {
-                GesturesToUse.Add(GestureType.swipe_left);
-                GesturesToUse.Add(GestureType.swipe_right);
-                GesturesToUse.Add(GestureType.swipe_up);
-                GesturesToUse.Add(GestureType.swipe_down);
-                GesturesToUse.Add(GestureType.tap_left);
-                GesturesToUse.Add(GestureType.tap_right);
-                GesturesToUse.Add(GestureType.tap_up);
-                GesturesToUse.Add(GestureType.tap_down);
-                GesturesToUse.Add(GestureType.square);
+                GesturesToUse.Add(GestureType.triangle);
                 GesturesToUse.Add(GestureType.x);
-               // GesturesToUse.Add(GestureType.c);
+                GesturesToUse.Add(GestureType.side_x);
+                GesturesToUse.Add(GestureType.rectangle);
                 GesturesToUse.Add(GestureType.circle);
+                GesturesToUse.Add(GestureType.check);
+                GesturesToUse.Add(GestureType.caret);
+                GesturesToUse.Add(GestureType.zigzag);
+                GesturesToUse.Add(GestureType.arrow);
+                GesturesToUse.Add(GestureType.x);
+                GesturesToUse.Add(GestureType.left_bracket);
+                GesturesToUse.Add(GestureType.right_bracket);   
+                GesturesToUse.Add(GestureType.star);
+                GesturesToUse.Add(GestureType.unknown);
             }
             else
             {
-                GesturesToUse.Add(GestureType.swipe_left);
-                GesturesToUse.Add(GestureType.swipe_right);
-                GesturesToUse.Add(GestureType.swipe_up);
-                GesturesToUse.Add(GestureType.swipe_down);
-                GesturesToUse.Add(GestureType.swipe_front);
-                GesturesToUse.Add(GestureType.swipe_back);
-                GesturesToUse.Add(GestureType.tap_left);
-                GesturesToUse.Add(GestureType.tap_right);
-                GesturesToUse.Add(GestureType.tap_up);
-                GesturesToUse.Add(GestureType.tap_down);
-                GesturesToUse.Add(GestureType.tap_front);
-                GesturesToUse.Add(GestureType.tap_back);
-                GesturesToUse.Add(GestureType.square);
-                GesturesToUse.Add(GestureType.x);
-                GesturesToUse.Add(GestureType.c);
-                GesturesToUse.Add(GestureType.arm_drop);
-                GesturesToUse.Add(GestureType.arm_lift);
-                GesturesToUse.Add(GestureType.horizontal_circle);
-                GesturesToUse.Add(GestureType.vertical_circle);
-                GesturesToUse.Add(GestureType.z);
-                GesturesToUse.Add(GestureType.spiral);
                 GesturesToUse.Add(GestureType.triangle);
+                GesturesToUse.Add(GestureType.x);
+                GesturesToUse.Add(GestureType.side_x);
+                GesturesToUse.Add(GestureType.rectangle);
+                GesturesToUse.Add(GestureType.circle);
+                GesturesToUse.Add(GestureType.check);
+                GesturesToUse.Add(GestureType.caret);
+                GesturesToUse.Add(GestureType.zigzag);
+                GesturesToUse.Add(GestureType.arrow);
+                GesturesToUse.Add(GestureType.x);
+                GesturesToUse.Add(GestureType.left_bracket);
+                GesturesToUse.Add(GestureType.right_bracket);
+                GesturesToUse.Add(GestureType.star);
+                GesturesToUse.Add(GestureType.unknown);
             }
-            //GesturesToUse.Add(GestureType.two_handed_fb);
-            //GesturesToUse.Add(GestureType.two_handed_lr);
+     
         }
     }
 }

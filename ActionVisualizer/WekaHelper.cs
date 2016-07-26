@@ -24,15 +24,15 @@ namespace ActionVisualizer
         static GestureSample GS;
         static Classifier cls;
         static Classifier cls3D;
-        static ExperimentControl EC;
+        //static ExperimentControl EC;
 
         public static void initialize()
         {
             //read classifier            
             cls = (Classifier)weka.core.SerializationHelper.read(Config.Classifier2D);
             cls3D = (Classifier)weka.core.SerializationHelper.read(Config.Classifier6D);
-            EC = new ExperimentControl();
-            EC.Initialize();
+            //EC = new ExperimentControl();
+            //EC.Initialize();
         }
 
         public static string Classify(bool useRubine, float duration, bool righthandedness, List<float> SpeakerAngles, PointCollection pointHist, StylusPointCollection S, List<List<int>> hist, List<List<int>> ihist)
@@ -53,8 +53,8 @@ namespace ActionVisualizer
             GS = new GestureSample(GestureTests.Types.GestureType.unknown, righthandedness,duration,SpeakerAngles,InterpretedPoints,StylusPoints,VelocityHistory,InverseVelocityHistory);
             GS.ComputeFeatures(GestureFeatures.PointsStroke);
 
-            if (useRubine)
-                return EC.Recognizer.Classify(GS).ToString();
+            //if (useRubine)
+            //    return EC.Recognizer.Classify(GS).ToString();
             WriteARFF();
 
             Instances test = new Instances(new java.io.FileReader("outfile.arff"));
@@ -96,8 +96,8 @@ namespace ActionVisualizer
             GS = new GestureSample(GestureTests.Types.GestureType.unknown, righthandedness, duration, SpeakerAngles, SpeakerElevations, InterpretedPoints, StylusPoints, VelocityHistory, InverseVelocityHistory);
             GS.ComputeFeatures(GestureFeatures.PointsStroke);
 
-            if (useRubine)
-                return EC.Recognizer.Classify(GS).ToString();
+            //if (useRubine)
+            //    return EC.Recognizer.Classify(GS).ToString();
             WriteARFF3D();
 
             Instances test = new Instances(new java.io.FileReader("outfile.arff"));

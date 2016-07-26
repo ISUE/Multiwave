@@ -26,11 +26,6 @@ namespace GestureTests.Gesture
     /// </summary>
     public class GestureSample
     {
-        private List<float> angles;
-        private List<Vector3> interpretedPoints;
-        private List<Vector3> strokePoints;
-        private List<Vector3> velocities;
-        private List<Vector3> inverseVelocities;
 
         /// <summary>
         /// Type of Gesture.

@@ -55,11 +55,11 @@ namespace ActionVisualizer
         public Tuple<Gesture,float> Classify(Gesture candidate)
         {
             Gesture best = null;
-            float best_score = float.PositiveInfinity;
+            float best_score = float.NegativeInfinity;
             foreach (Gesture template in templates)
             {
                 float score = DTW_Distance(candidate, template, (int)(template.vecs.Count * .25f));
-                if (score < best_score)
+                if (score > best_score)
                 {
                     best = template;
                     best_score = score;

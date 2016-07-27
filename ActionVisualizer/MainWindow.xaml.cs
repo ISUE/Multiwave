@@ -14,8 +14,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
-using VerySimpleKalman;
-
 
 
 namespace ActionVisualizer
@@ -60,7 +58,6 @@ namespace ActionVisualizer
         int[] towards_displacement;
 
         double ratio;
-        VDKalman filter;
 
         // More helper variables for declaring 
         int selectedChannels = 1;
@@ -75,6 +72,7 @@ namespace ActionVisualizer
         List<List<int>> inverse_history;
         PointCollection pointHist;
         StylusPointCollection S;
+        int maxHistoryLength = 30;
 
         Rectangle[] bars;
         Line[] lines;
@@ -161,14 +159,10 @@ namespace ActionVisualizer
 
             _barcanvas.Background = new SolidColorBrush(Colors.Black);
 
-            filter = new VDKalman(2);
-            filter.initialize(1, .1, 1, 0);
-
             history.Add(new List<int> { 0 });
             inverse_history.Add(new List<int> { 0 });
 
-            Log = new GestureTests.Logger("ActionVisualizer");
-            //WekaHelper.initialize();
+            Log = new GestureTests.Logger("ActionVisualizer");            
             JK = new JackKnife();
             JK.InitializeFromFolder(GestureTests.Config.DataPath);
         }
@@ -217,19 +211,15 @@ namespace ActionVisualizer
                 float sample32 = sample / 2147483648f;
                 inbetween[i - buffersize] = sample32;
             }
-            /*
-            for (int i = 0; i < 4096; ++i)
-                sampledata[i] = 0.01*(float)Math.Sin(2 * Math.PI * i * 19000 / 44100f);
-            */
+
+
             bufferFFT();
-            filter.time_Update();
             if (wOut != null)
             {
                 foreach (Rectangle r in bars)
                     _barcanvas.Children.Remove(r);
 
                 KF = new List<KeyFrequency>();
-                //gestureDetected.Text = "";
                 for (int i = 0; i < frequencies.Count; i++)
                 {
                     if (history[i].Count > 0)
@@ -238,25 +228,19 @@ namespace ActionVisualizer
                         KF.Add(new KeyFrequency(frequencies.ElementAt(i), i + 1, frequencyStep/30, filteredindata, centerbins.ElementAt(i), 0));
 
                     velocity[i] = KF.ElementAt(i).state;
-                    filter.measurement_Update(velocity[i]);
-                    displacement[i] += (int)filter.x_priori[0];
+                    displacement[i] += velocity[i];
 
-                    //gestureDetected.Text += " " + displacement[i];
                     bars[i] = createBar(channelLabel[i], selectedChannels, velocity[i], frequencyStep/30+3);
                     _barcanvas.Children.Add(bars[i]);
 
                     if ((displacement[i] - prev_displacement[i]) < 0 && velocity[i] > 0)
                     {
-                        //Console.WriteLine("Away Stop: " + (instant_displacement[i]-prev_displacement[i]));
                         ratio = Math.Abs((double)((instant_displacement[i] - prev_displacement[i]) / (double)towards_displacement[i]));
-                        //double ratio = (double)((instant_displacement[i] - prev_displacement[i]) + (double)towards_displacement[i]);
 
-                        //Console.WriteLine(filter.x_priori[0]);
                         prev_displacement[i] = displacement[i];
                     }
                     if ((displacement[i] - prev_displacement[i]) > 0 && velocity[i] < 0)
                     {
-                        //Console.WriteLine("Towards Stop: " + (instant_displacement[i] - prev_displacement[i]));
                         towards_displacement[i] = instant_displacement[i] - prev_displacement[i];
                         prev_displacement[i] = displacement[i];
                     }
@@ -264,8 +248,8 @@ namespace ActionVisualizer
 
                     history[i].Add(velocity[i]);
                     inverse_history[i].Add(KF[i].inverse_state);
-                    //if (history[i].Count > 20)
-                    //    history[i].RemoveAt(0);
+                    if (history[i].Count > maxHistoryLength)
+                        history[i].RemoveAt(0);
                 }
                 detectGestures();
             }
@@ -312,9 +296,9 @@ namespace ActionVisualizer
                 }
                 //gestureDetected.Text += (Math.Round(tot_X,2) + " " + Math.Round(tot_Y,2));
                 pointHist.Add(new Point(tot_X, tot_Y));
-                //if (pointHist.Count > 20)
-                //    pointHist.RemoveAt(0);
-                if (!gesture_started && tot_X == 0 && tot_Y == 0)
+                if (pointHist.Count > maxHistoryLength)
+                    pointHist.RemoveAt(0);
+                /*if (!gesture_started && tot_X == 0 && tot_Y == 0)
                 {
                     idle_count++;
 
@@ -340,7 +324,7 @@ namespace ActionVisualizer
                     motion_free = 0;
                     idle_count = 0;
                 }
-
+                */
                 generateStroke(pointHist);
             }
             else if (selectedChannels >= 3)
@@ -352,19 +336,15 @@ namespace ActionVisualizer
                     tot_X += now.x;
                     tot_Y += now.y;
                     tot_Z += now.z;
-                    //For Graphing
-                    //tot_X -= now.x;
-                    //tot_Y += now.z;
-                    //tot_Z -= now.y;
                 }
                 //gestureDetected.Text += (Math.Round(tot_X, 2) + " " + Math.Round(tot_Y, 2) + " " + Math.Round(tot_Z, 2));
                 pointHist.Add(new Point(tot_X, tot_Y));
                 point3DHist.Add(new Point3D(tot_X, tot_Y, tot_Z));
-                //if (pointHist.Count > 20)
-                //    pointHist.RemoveAt(0);
-                //if (point3DHist.Count > 20)
-                //    point3DHist.RemoveAt(0);
-                if (!gesture_started && tot_X == 0 && tot_Y == 0 && tot_Z == 0)
+                if (pointHist.Count > maxHistoryLength)
+                    pointHist.RemoveAt(0);
+                if (point3DHist.Count > maxHistoryLength)
+                    point3DHist.RemoveAt(0);
+                /*if (!gesture_started && tot_X == 0 && tot_Y == 0 && tot_Z == 0)
                 {
                     idle_count++;
                     pointHist.Clear();
@@ -388,10 +368,9 @@ namespace ActionVisualizer
                     gesture_started = true;
                     motion_free = 0;
                     idle_count = 0;
-                }
+                }*/
 
                 generateStroke(pointHist);
-                //addPoints(point3DHist);
             }
             
             
@@ -421,7 +400,7 @@ namespace ActionVisualizer
                 indata[i].Im = 0;
             }
             Exocortex.DSP.Fourier.FFT(indata, buffersize * 2, Exocortex.DSP.FourierDirection.Forward);
-            filteredindata = filterMean(indata, 1.3);
+            filteredindata = filterMean(indata, 1.25);
         }
 
         private void StartStopSineWave()
@@ -483,9 +462,6 @@ namespace ActionVisualizer
                 {
                     Console.WriteLine("Invalid audio channel count. Please select a lower number of audio channels");
                 }
-                //waveOut = new WaveOut();
-                //waveOut.Init(sineWaveProvider);                    
-                //waveOut.Init(splitter);
 
                 Console.WriteLine("Number of Channels: " + wOut.OutputWaveFormat.Channels);                
             }
@@ -498,7 +474,6 @@ namespace ActionVisualizer
 
                 frequencies.Clear();
                 centerbins.Clear();
-                //Foutstream.Clear();
             }
         }
 
@@ -507,7 +482,7 @@ namespace ActionVisualizer
             return 20.0f * (float)Math.Log10(Math.Sqrt(y.Re * y.Re + y.Im * y.Im) / .02);
         }
 
-        // Relative high pass filter. 
+        // Relative threshold filter. 
         public double[] filterMean(ComplexF[] data, double factor)
         {
             double[] outdata = new double[data.Length];
@@ -645,47 +620,41 @@ namespace ActionVisualizer
         {
             int motion_threshold = 3; //originally 5         
             int ignore_threshold = 10;
-             
+
+            /* 
             if( ignoreFrames <= ignore_threshold)                          
             {
-                motion_free = 0;
-                readyforgesture = false;
-                colorBox.Background = new SolidColorBrush(Colors.Red);
-                gesture_started = false;
-                //Clear the buffers
-                foreach (List<int> sublist in history)
-                    sublist.Clear();
-                foreach (List<int> sublist in inverse_history)
-                    sublist.Clear();
-                pointHist.Clear();
-                point3DHist.Clear();
-            }
+                resetData();
+            }*/
 
-            if (gesture_started && ignoreFrames > ignore_threshold && motion_free > motion_threshold && selectedChannels >= 2)
+            //if (gesture_started && ignoreFrames > ignore_threshold && motion_free > motion_threshold && selectedChannels >= 2)
+            if (selectedChannels >= 2)
             {
-
+                /*
                 pointHist = new PointCollection(pointHist.Reverse().Skip(motion_threshold).Reverse());
                 point3DHist = new Point3DCollection(point3DHist.Reverse().Skip(motion_threshold).Reverse());
-                S = new StylusPointCollection(S.Reverse().Skip(motion_threshold).Reverse());               
+                S = new StylusPointCollection(S.Reverse().Skip(motion_threshold).Reverse());
                 for (int i = 0; i < history.Count; i++)
                 {
                     history[i] = new List<int>(history[i].Reverse<int>().Skip(motion_threshold).Reverse<int>());
                     inverse_history[i] = new List<int>(inverse_history[i].Reverse<int>().Skip(motion_threshold).Reverse<int>());
-                }
+                }*/
 
                 if (detectMode.IsChecked.Value && pointHist.Count > 3)
                 {
-                    //Call function to find features and test with weka machine
+                    //Attempt to Classify
+                    //TODO Segmentation of data into different windows. find one with highest reliability.
                     if (selectedChannels == 2)
                     {
                         List<Vector2> StylusPoints = new List<Vector2>();
                         foreach (StylusPoint P in S)
                             StylusPoints.Add(new Vector2((float)P.X, (float)P.Y));
                         float[] speakers = { (float)KF[0].speakerTheta, (float)KF[1].speakerTheta };
-                        Tuple<Gesture, float> temp = JK.Classify(new Gesture(StylusPoints, "unknown")); 
-                        //WekaHelper.Classify(useRubine.IsChecked.Value, pointHist.Count() * waveIn.BufferMilliseconds,
-                            //handSelector.Text == "right", new List<float>(speakers), pointHist, S, history, inverse_history);
-                        switch(temp.Item1.gname)
+                        Tuple<Gesture, float> temp = JK.Classify(new Gesture(StylusPoints, "unknown"));
+                       
+                        if (temp.Item1 == null) return;
+
+                        switch (temp.Item1.gname)
                         {
                             case "swipe_up":
                                 gestureDetected.Text = "swipe_forward";
@@ -698,26 +667,28 @@ namespace ActionVisualizer
                                 break;
                             case "tap_down":
                                 gestureDetected.Text = "tap_back";
-                                break;                            
+                                break;
                             default:
                                 gestureDetected.Text = temp.Item1.gname;
                                 break;
-                        }                        
+                        }
+                        if (temp.Item2 > 2.0f)
+                            resetData();
+
+                        gestureDetected.Text += "\n" + temp.Item2.ToString();
 
                     }
                     if (selectedChannels == 3)
                     {
                         float[] speakers = { (float)KF[0].speakerTheta, (float)KF[1].speakerTheta, (float)KF[2].speakerTheta };
                         float[] elevations = { (float)KF[0].speakerAltitude, (float)KF[1].speakerAltitude, (float)KF[2].speakerAltitude };
-                        gestureDetected.Text = "";//WekaHelper.Classify3D(useRubine.IsChecked.Value, pointHist.Count() * waveIn.BufferMilliseconds,
-                            //handSelector.Text == "right", new List<float>(speakers), new List<float>(elevations), point3DHist, history, inverse_history);
+                        gestureDetected.Text = "";
                     }
                     if (selectedChannels == 6)
                     {
                         float[] speakers = { (float)KF[0].speakerTheta, (float)KF[1].speakerTheta, (float)KF[2].speakerTheta, (float)KF[3].speakerTheta, (float)KF[4].speakerTheta, (float)KF[5].speakerTheta };
                         float[] elevations = { (float)KF[0].speakerAltitude, (float)KF[1].speakerAltitude, (float)KF[2].speakerAltitude, (float)KF[3].speakerAltitude, (float)KF[4].speakerAltitude, (float)KF[5].speakerAltitude };
-                        gestureDetected.Text = "";//WekaHelper.Classify3D(useRubine.IsChecked.Value, pointHist.Count() * waveIn.BufferMilliseconds,
-                            //handSelector.Text == "right", new List<float>(speakers), new List<float>(elevations), point3DHist, history, inverse_history);
+                        gestureDetected.Text = "";
                     }
 
                     //All the parameters to be passed to ComplexGesture are passed here.
@@ -725,12 +696,12 @@ namespace ActionVisualizer
                     double deltaY = S.Last().Y - S.First().Y;
 
                     double magnitude = Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
-                    double angle = Math.Atan2(deltaY,deltaX);
+                    double angle = Math.Atan2(deltaY, deltaX);
 
-                    double duration = pointHist.Count() * waveIn.BufferMilliseconds;              
+                    double duration = pointHist.Count() * waveIn.BufferMilliseconds;
 
-                    if(gestureDetected.Text == gestureSelector.Text)
-                        Log.Log(gestureDetected.Text, gestureSelector.Text, history);                    
+                    if (gestureDetected.Text == gestureSelector.Text)
+                        Log.Log(gestureDetected.Text, gestureSelector.Text, history);
                 }
                 else if (readyforgesture && pointHist.Count > 2)
                 {
@@ -739,20 +710,26 @@ namespace ActionVisualizer
                     else
                         writeTo3DFile();
                 }
-                //Clear the buffers
-                foreach (List<int> sublist in history)
-                    sublist.Clear();
-                foreach (List<int> sublist in inverse_history)
-                    sublist.Clear();
-                pointHist.Clear();
-                point3DHist.Clear();
-
-                //prepare for next gesture (might need a button press)
-                readyforgesture = false;
-                colorBox.Background = new SolidColorBrush(Colors.Red);
-                gesture_started = false;
-                motion_free = 0;
+                //if(gestureDetected.Text != "")
+                //    resetData();
             }
+        }
+
+        public void resetData()
+        {
+            //Clear the buffers
+            foreach (List<int> sublist in history)
+                sublist.Clear();
+            foreach (List<int> sublist in inverse_history)
+                sublist.Clear();
+            pointHist.Clear();
+            point3DHist.Clear();
+
+            //prepare for next gesture (might need a button press)
+            readyforgesture = false;
+            colorBox.Background = new SolidColorBrush(Colors.Red);
+            gesture_started = false;
+            motion_free = 0;
         }
 
         public void writeTo2DFile()

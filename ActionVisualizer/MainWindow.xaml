@@ -51,11 +51,11 @@
             <ComboBoxItem Content="8"/>
         </ComboBox>
         <Button Content="Start Sound" Grid.Column="1" Grid.Row="1" Height="23" HorizontalAlignment="Center" Name="button1" VerticalAlignment="Center" Width="75" Click="button1_Click" />
-        <TextBlock FontSize="20" Grid.Column="2" Grid.ColumnSpan="2" Grid.Row="1" Height="50" TextAlignment="Center" HorizontalAlignment="Center" Name="gestureDetected" VerticalAlignment="Center" Width="150" />
+        <TextBlock FontSize="20" Grid.Column="2" Grid.ColumnSpan="2" Grid.Row="1" Height="50" TextAlignment="Center" HorizontalAlignment="Stretch" Name="gestureDetected" VerticalAlignment="Center"/>
         <CheckBox  Visibility="Hidden" Grid.Column="2" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Top" Name="useRubine" Content="Use Rubine?" IsChecked="False"></CheckBox>
         <CheckBox  Grid.Column="4" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Top" Name="use3DGestures" Content="3D Mode?" IsChecked="False" Unchecked="use3DGestures_Unchecked" Checked="use3DGestures_Checked"></CheckBox>
         <CheckBox  Grid.Column="4" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Bottom" Name="detectMode" Content="Detect" IsChecked="False" Unchecked="use3DGestures_Unchecked" Checked="use3DGestures_Checked"></CheckBox>
-        <ComboBox Name="gestureSelector" Visibility="Visible" IsEditable="True" IsReadOnly="True" Text="swipe_left" HorizontalAlignment="Stretch" VerticalAlignment="Center" Grid.Row="2" Grid.Column="4">
+        <ComboBox Name="gestureSelector" Visibility="Visible" IsEditable="True" IsReadOnly="True" Text="swipe_left" HorizontalAlignment="Stretch" VerticalAlignment="Center" Grid.Row="2" Grid.Column="4" >
             <ComboBoxItem Content="swipe_left"/>
             <ComboBoxItem Content="swipe_right"/>
             <ComboBoxItem Content="swipe_up"/>
@@ -69,10 +69,6 @@
             <ComboBoxItem Content="square"/>
             <ComboBoxItem Content="x"/>
             <ComboBoxItem Content="L"/>
-            <!--ComboBoxItem Content="c"/>
-            <ComboBoxItem Content="two_handed_fb"/>
-            <ComboBoxItem Content="two_handed_lr"-->
-            <ComboBoxItem Content="detect"/>
         </ComboBox>
         <ComboBox HorizontalAlignment="Right" Visibility="Hidden" IsEditable="True" IsReadOnly="True" Name="handSelector" Text="right" VerticalAlignment="Center" Grid.Column="5" Grid.Row="1" Margin="0,15" Width="117">
             <ComboBoxItem Content="right" />

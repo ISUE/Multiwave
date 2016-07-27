@@ -4,6 +4,7 @@ using NAudio.Dsp;
 using NAudio.Wave;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -95,7 +96,7 @@ namespace ActionVisualizer
             this.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen;
 
             this.KeyDown += new KeyEventHandler(MainWindow_KeyDown);
-
+            this.KeyUp += new KeyEventHandler(MainWindow_KeyUp);
             int waveInDevices = WaveIn.DeviceCount;
             for (int waveInDevice = 0; waveInDevice < waveInDevices; waveInDevice++)
             {
@@ -400,7 +401,7 @@ namespace ActionVisualizer
                 indata[i].Im = 0;
             }
             Exocortex.DSP.Fourier.FFT(indata, buffersize * 2, Exocortex.DSP.FourierDirection.Forward);
-            filteredindata = filterMean(indata, 1.25);
+            filteredindata = filterMean(indata, 1.3);
         }
 
         private void StartStopSineWave()
@@ -640,21 +641,34 @@ namespace ActionVisualizer
                     inverse_history[i] = new List<int>(inverse_history[i].Reverse<int>().Skip(motion_threshold).Reverse<int>());
                 }*/
 
-                if (detectMode.IsChecked.Value && pointHist.Count > 3)
+                if (detectMode.IsChecked.Value && pointHist.Count >= 5)
                 {
                     //Attempt to Classify
                     //TODO Segmentation of data into different windows. find one with highest reliability.
+                    
                     if (selectedChannels == 2)
                     {
+                        List<Tuple<Gesture, float>> results = new List<Tuple<Gesture, float>>();
                         List<Vector2> StylusPoints = new List<Vector2>();
                         foreach (StylusPoint P in S)
                             StylusPoints.Add(new Vector2((float)P.X, (float)P.Y));
-                        float[] speakers = { (float)KF[0].speakerTheta, (float)KF[1].speakerTheta };
-                        Tuple<Gesture, float> temp = JK.Classify(new Gesture(StylusPoints, "unknown"));
-                       
-                        if (temp.Item1 == null) return;
 
-                        switch (temp.Item1.gname)
+                        for (int ii = 5; ii < pointHist.Count; ii+=5)
+                        {                                                      
+                            Tuple<Gesture, float> temp = JK.Classify(new Gesture(StylusPoints.GetRange(StylusPoints.Count - ii - 1, ii), "unknown"));
+                            results.Add(temp);
+                        }
+
+                        Tuple<Gesture, float> best = results[0];
+                        foreach (Tuple<Gesture,float> result in results)
+                        {
+                            if (result.Item2 >= result.Item2)
+                                best = result;
+                        }
+
+                        if (best.Item1 == null) return;
+
+                        switch (best.Item1.gname)
                         {
                             case "swipe_up":
                                 gestureDetected.Text = "swipe_forward";
@@ -669,47 +683,27 @@ namespace ActionVisualizer
                                 gestureDetected.Text = "tap_back";
                                 break;
                             default:
-                                gestureDetected.Text = temp.Item1.gname;
+                                gestureDetected.Text = best.Item1.gname;
                                 break;
                         }
-                        if (temp.Item2 > 2.0f)
+                        if (best.Item2 > 2.0f)
                             resetData();
 
-                        gestureDetected.Text += "\n" + temp.Item2.ToString();
+                        gestureDetected.Text += "\n" + best.Item2.ToString();
 
                     }
                     if (selectedChannels == 3)
-                    {
-                        float[] speakers = { (float)KF[0].speakerTheta, (float)KF[1].speakerTheta, (float)KF[2].speakerTheta };
-                        float[] elevations = { (float)KF[0].speakerAltitude, (float)KF[1].speakerAltitude, (float)KF[2].speakerAltitude };
+                    {               
                         gestureDetected.Text = "";
                     }
                     if (selectedChannels == 6)
                     {
-                        float[] speakers = { (float)KF[0].speakerTheta, (float)KF[1].speakerTheta, (float)KF[2].speakerTheta, (float)KF[3].speakerTheta, (float)KF[4].speakerTheta, (float)KF[5].speakerTheta };
-                        float[] elevations = { (float)KF[0].speakerAltitude, (float)KF[1].speakerAltitude, (float)KF[2].speakerAltitude, (float)KF[3].speakerAltitude, (float)KF[4].speakerAltitude, (float)KF[5].speakerAltitude };
                         gestureDetected.Text = "";
                     }
 
-                    //All the parameters to be passed to ComplexGesture are passed here.
-                    double deltaX = S.Last().X - S.First().X;
-                    double deltaY = S.Last().Y - S.First().Y;
-
-                    double magnitude = Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
-                    double angle = Math.Atan2(deltaY, deltaX);
-
-                    double duration = pointHist.Count() * waveIn.BufferMilliseconds;
-
                     if (gestureDetected.Text == gestureSelector.Text)
                         Log.Log(gestureDetected.Text, gestureSelector.Text, history);
-                }
-                else if (readyforgesture && pointHist.Count > 2)
-                {
-                    if (selectedChannels == 2)
-                        writeTo2DFile();
-                    else
-                        writeTo3DFile();
-                }
+                }               
                 //if(gestureDetected.Text != "")
                 //    resetData();
             }
@@ -726,9 +720,6 @@ namespace ActionVisualizer
             point3DHist.Clear();
 
             //prepare for next gesture (might need a button press)
-            readyforgesture = false;
-            colorBox.Background = new SolidColorBrush(Colors.Red);
-            gesture_started = false;
             motion_free = 0;
         }
 
@@ -845,6 +836,10 @@ namespace ActionVisualizer
                 readyforgesture = true;
                 colorBox.Background = new SolidColorBrush(Colors.Green);
             }
+            if (e.Key == Key.R)
+            {
+                resetData();
+            }
             if (e.Key == Key.C)
             {
                 _ink.Strokes.Clear();
@@ -854,6 +849,22 @@ namespace ActionVisualizer
             {
                 generateAllGestureStrokes();
             }
+        }
+        void MainWindow_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.A)
+            {
+                if (readyforgesture && pointHist.Count > 2)
+                {
+                    if (selectedChannels == 2)
+                        writeTo2DFile();
+                    else
+                        writeTo3DFile();
+                }
+                readyforgesture = false;
+                colorBox.Background = new SolidColorBrush(Colors.Red);
+            }
+          
         }
 
         private void SaveStroke(StylusPointCollection S, string filename)

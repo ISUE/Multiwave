@@ -30,7 +30,8 @@ namespace ActionVisualizer
                 {
                     Add(gs.StrokePoints, gs.Gesture.ToString());
                 }
-            }
+                break;
+            }            
         }
 
         public void Add(Gesture alpha)

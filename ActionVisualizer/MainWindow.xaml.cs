@@ -32,7 +32,7 @@ namespace ActionVisualizer
         public int waveOutChannels;
 
         // Empirically determined minimum frequency for two speaker configurations. 
-        public int minFrequency = 18700;
+        public int minFrequency = 18200;
         public int frequencyStep = 500;
 
         // Length of buffer gives ~24 hz updates.
@@ -641,7 +641,7 @@ namespace ActionVisualizer
                     inverse_history[i] = new List<int>(inverse_history[i].Reverse<int>().Skip(motion_threshold).Reverse<int>());
                 }*/
 
-                if (detectMode.IsChecked.Value && pointHist.Count >= 5)
+                if (detectMode.IsChecked.Value && pointHist.Count > 5)
                 {
                     //Attempt to Classify
                     //TODO Segmentation of data into different windows. find one with highest reliability.
@@ -666,7 +666,7 @@ namespace ActionVisualizer
                                 best = result;
                         }
 
-                        if (best.Item1 == null) return;
+                        if (best.Item1 == null || best.Item2 < 1.5f) return;
 
                         switch (best.Item1.gname)
                         {
@@ -686,8 +686,6 @@ namespace ActionVisualizer
                                 gestureDetected.Text = best.Item1.gname;
                                 break;
                         }
-                        if (best.Item2 > 2.0f)
-                            resetData();
 
                         gestureDetected.Text += "\n" + best.Item2.ToString();
 
@@ -725,7 +723,7 @@ namespace ActionVisualizer
 
         public void writeTo2DFile()
         {
-            string DataPath = @"..\..\..\data\u010\";
+            string DataPath = @"..\..\..\data\n001\";
             string ImagePath = @"..\..\..\image\u001\";
             string StrokePath = @"..\..\..\stroke\u001\";
             string searchPattern = gestureSelector.Text + "???";
@@ -775,7 +773,7 @@ namespace ActionVisualizer
 
         public void writeTo3DFile()
         {
-            string DataPath = @"..\..\..\data6D\u010\";
+            string DataPath = @"..\..\..\data6D\n001\";
             string searchPattern = gestureSelector.Text + "???";
             DirectoryInfo di = new DirectoryInfo(DataPath);
             FileInfo[] files = di.GetFiles(searchPattern);
@@ -831,15 +829,14 @@ namespace ActionVisualizer
 
         void MainWindow_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.A)
+            if (!readyforgesture && (e.Key == Key.A))
             {
+                resetData();
+
                 readyforgesture = true;
                 colorBox.Background = new SolidColorBrush(Colors.Green);
             }
-            if (e.Key == Key.R)
-            {
-                resetData();
-            }
+
             if (e.Key == Key.C)
             {
                 _ink.Strokes.Clear();

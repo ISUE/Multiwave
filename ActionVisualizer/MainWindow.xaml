@@ -55,19 +55,19 @@
         <CheckBox  Visibility="Hidden" Grid.Column="2" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Top" Name="useRubine" Content="Use Rubine?" IsChecked="False"></CheckBox>
         <CheckBox  Grid.Column="4" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Top" Name="use3DGestures" Content="3D Mode?" IsChecked="False" Unchecked="use3DGestures_Unchecked" Checked="use3DGestures_Checked"></CheckBox>
         <CheckBox  Grid.Column="4" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Bottom" Name="detectMode" Content="Detect" IsChecked="False" Unchecked="use3DGestures_Unchecked" Checked="use3DGestures_Checked"></CheckBox>
-        <ComboBox Name="gestureSelector" Visibility="Visible" IsEditable="True" IsReadOnly="True" Text="swipe_left" HorizontalAlignment="Stretch" VerticalAlignment="Center" Grid.Row="2" Grid.Column="4" >
-            <ComboBoxItem Content="swipe_left"/>
-            <ComboBoxItem Content="swipe_right"/>
-            <ComboBoxItem Content="swipe_up"/>
-            <ComboBoxItem Content="swipe_down"/>
-            <ComboBoxItem Content="tap_left"/>
-            <ComboBoxItem Content="tap_right"/>
-            <ComboBoxItem Content="tap_up"/>
-            <ComboBoxItem Content="tap_down"/>
-            <ComboBoxItem Content="scratchout"/>
-            <ComboBoxItem Content="circle"/>
-            <ComboBoxItem Content="square"/>
+        <ComboBox Name="gestureSelector" Visibility="Visible" IsEditable="True" IsReadOnly="True" Text="triangle" HorizontalAlignment="Stretch" VerticalAlignment="Center" Grid.Row="2" Grid.Column="4" >
+            <ComboBoxItem Content="triangle"/>
             <ComboBoxItem Content="x"/>
+            <ComboBoxItem Content="side_x"/>
+            <ComboBoxItem Content="rectangle"/>
+            <ComboBoxItem Content="circle"/>
+            <ComboBoxItem Content="check"/>
+            <ComboBoxItem Content="caret"/>
+            <ComboBoxItem Content="zigzag"/>
+            <ComboBoxItem Content="arrow"/>
+            <ComboBoxItem Content="left_bracket"/>
+            <ComboBoxItem Content="right_bracket"/>
+            <ComboBoxItem Content="star"/>
             <ComboBoxItem Content="L"/>
         </ComboBox>
         <ComboBox HorizontalAlignment="Right" Visibility="Hidden" IsEditable="True" IsReadOnly="True" Name="handSelector" Text="right" VerticalAlignment="Center" Grid.Column="5" Grid.Row="1" Margin="0,15" Width="117">
@@ -92,7 +92,7 @@
             <ComboBoxItem Content="12" />
         </ComboBox>
         
-        <Canvas Visibility ="Visible" Grid.Column="3" Grid.ColumnSpan="1" Grid.Row="1" HorizontalAlignment="Stretch" Name="colorBox" VerticalAlignment="Stretch" Background="Red"/>
+        <Canvas Visibility ="Visible" Grid.Column="2" Grid.ColumnSpan="2" Grid.Row="1" HorizontalAlignment="Stretch" Name="colorBox" VerticalAlignment="Stretch" Background="Red" Opacity="0.2"/>
     </Grid>
 </Window>
 

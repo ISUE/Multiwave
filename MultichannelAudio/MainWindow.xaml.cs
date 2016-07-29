@@ -27,7 +27,7 @@ namespace MultichannelAudio
     public partial class MainWindow : Window
     {
         //private WaveOut waveOut;
-        private AsioOut asioOut;
+        private WasapiOut wOut;
         private WaveIn waveIn;
 
         public int waveOutChannels;        
@@ -212,7 +212,7 @@ namespace MultichannelAudio
                 chart2.AddLineGraph(comp2, Colors.Red);
             }
 
-            if ((asioOut != null) && recording)
+            if ((wOut != null) && recording)
             {
                 //for (int i = 0; i < frequencies.Count; i++)
                 //{
@@ -298,7 +298,7 @@ namespace MultichannelAudio
 
         private void StartStopSineWave()
         {
-            if (asioOut == null)
+            if (wOut == null)
             {
                 button1.Content = "Stop Sound";
                 //string str = channelSelector.Text;
@@ -306,7 +306,7 @@ namespace MultichannelAudio
                 Console.WriteLine("User Selected Channels: " + selectedChannels);
                 WaveOutCapabilities outdeviceInfo = WaveOut.GetCapabilities(0);                
                 waveOutChannels = outdeviceInfo.Channels;
-                asioOut = new AsioOut(0);
+                wOut = new WasapiOut(NAudio.CoreAudioApi.AudioClientShareMode.Shared, 0);
                 int waveOutDevices = WaveOut.DeviceCount;
                 for(int i = 0; i< waveOutDevices; i++)
                 {
@@ -346,8 +346,8 @@ namespace MultichannelAudio
                 var splitter = new MultiplexingWaveProvider(inputs, selectedChannels);
                 try
                 {
-                    asioOut.Init(splitter);
-                    asioOut.Play();
+                    wOut.Init(splitter);
+                    wOut.Play();
                 }
                 catch(System.ArgumentException)
                 {
@@ -357,14 +357,13 @@ namespace MultichannelAudio
                 //waveOut.Init(sineWaveProvider);                    
                 //waveOut.Init(splitter);
                 
-                Console.WriteLine("Number of Channels: " + asioOut.NumberOfOutputChannels);
-                Console.WriteLine("Playback Latency: " + asioOut.PlaybackLatency);                
+                Console.WriteLine("Number of Channels: " + wOut.OutputWaveFormat.Channels);
             }
             else
             {
-                asioOut.Stop();
-                asioOut.Dispose();
-                asioOut = null;
+                wOut.Stop();
+                wOut.Dispose();
+                wOut = null;
                 button1.Content = "Generate Sound";
 
                 frequencies.Clear();

@@ -506,14 +506,11 @@ namespace ActionVisualizer
                 if (outdata[i] < (mean * factor))
                     outdata[i] = 0;
 
-            for (int i = 0; i < data.Length; i++)
+            for (int i = 1; i < data.Length-1; i++)
             {
-                if ((i > 0) && (i < (data.Length - 1)))
+                if ((outdata[i] > 0) && (priori[i] == 0) && (outdata[i - 1] == 0) && (outdata[i + 1] == 0))
                 {
-                    if ((outdata[i] > 0) && (priori[i] == 0) && (outdata[i - 1] == 0) && (outdata[i + 1] == 0))
-                    {
-                        outdata[i] = 0;
-                    }
+                    outdata[i] = 0;
                 }
                 priori[i] = outdata[i];
             }

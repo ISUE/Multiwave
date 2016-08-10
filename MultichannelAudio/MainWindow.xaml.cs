@@ -113,12 +113,12 @@ namespace MultichannelAudio
             }
 
             chart1.Viewport.Visible = new DataRect(0, -1.0, buffersize * 2, 2.0);
-            
+
             //chart2.Viewport.Visible = new DataRect(1620, -50, 280,110);
             chart2.Viewport.Visible = new DataRect(1620, 0, 280, 110);   
-                     
+            //chart2.Viewport.Visible = new DataRect(1620, 0, 280, 1);
             //chart3.Viewport.Visible = new DataRect(1, -30, 1, 60);
-            
+
             bins = new EnumerableDataSource<int>(bin);
             bins.SetXMapping(x => x);
 
@@ -269,7 +269,7 @@ namespace MultichannelAudio
             }
             //FastFourierTransform.FFT(true, 11, indata);
             Exocortex.DSP.Fourier.FFT(indata, buffersize * 2, Exocortex.DSP.FourierDirection.Forward);
-            filteredindata = filterMean(indata,1.3);
+            filteredindata = filterMean(indata,1.3);          
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -381,23 +381,26 @@ namespace MultichannelAudio
         {
             double[] outdata = new double[data.Length];
             double min = Double.PositiveInfinity;
+            double max = Double.NegativeInfinity;
             double mean = 0;
             for (int i = 0; i < data.Length; i++)
             {
                 outdata[i] = mag2db(data[i]);
                 min = Math.Min(outdata[i], min);
+                max = Math.Max(outdata[i], max);
             }
-            /*
+
             for (int i = 0; i < data.Length; i++)
             {
-                outdata[i] -= min;
+                outdata[i] = (outdata[i] - min);
                 mean += (outdata[i]);
             }
             mean /= data.Length;
+
             for (int i = 0; i < data.Length; i++)
                 if (outdata[i] < (mean * factor))
                     outdata[i] = 0;
-
+            
             for (int i = 0; i < data.Length; i++)
             {
                 if ((i > 0) && (i < (data.Length - 1)))
@@ -408,7 +411,7 @@ namespace MultichannelAudio
                     }
                 }
                 priori[i] = outdata[i];
-            }*/
+            }
             //Console.WriteLine("Mean: " + mean + " Min: " + min);
             return outdata;
         }

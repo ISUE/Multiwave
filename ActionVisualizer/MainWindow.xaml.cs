@@ -400,7 +400,7 @@ namespace ActionVisualizer
                 indata[i].Im = 0;
             }
             Exocortex.DSP.Fourier.FFT(indata, buffersize * 2, Exocortex.DSP.FourierDirection.Forward);
-            filteredindata = filterMean(indata, 1.3);
+            filteredindata = filterMean(indata, 1.5);
         }
 
         private void StartStopSineWave()

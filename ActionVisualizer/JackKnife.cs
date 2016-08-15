@@ -36,12 +36,13 @@ namespace ActionVisualizer
                     Add(gs.StrokePoints, gs.Gesture.ToString());
                 }
                 break;
-            }            
+            }
+            Normalize();   
         }
 
         public void Add(Gesture alpha)
         {
-            templates.Add(alpha);
+            templates.Add(alpha);            
         }
 
         public void Add(List<Vector2> points, string label)
@@ -106,7 +107,7 @@ namespace ActionVisualizer
             List<float> boundary = new List<float>();
             for (int ii = 0;
                 ii < candidate.vecs.Count() &&
-                ii < template.lower.Count &&
+                ii < template.lower.Count() &&
                 ii < template.upper.Count();
                 ii++)
             {
@@ -141,10 +142,10 @@ namespace ActionVisualizer
                 t.boundary = out_tuple.Item2;
             }
 
-            temp_templates.Sort();
+            temp_templates = temp_templates.OrderBy(x => x.bound).ToList();
 
 
-            float best_score = float.NegativeInfinity;
+            float best_score = float.PositiveInfinity;
             foreach (Gesture template in temp_templates)
             {
                 tested += 1.0f;
@@ -156,10 +157,10 @@ namespace ActionVisualizer
 
                 float score = DTW_Distance(candidate.vecs, template.vecs, Gesture.r);
 
-                if (score > template.rejection_threshold)
+                if (score >= template.rejection_threshold)
                     continue;
 
-                if (score > best_score)
+                if (score < best_score)
                 {
                     best = template;
                     best_score = score;
@@ -176,19 +177,19 @@ namespace ActionVisualizer
 
             for (int ii = 0; ii < m; ii++)
                 for (int jj = 0; jj < n; jj++)
-                    dtw[ii, jj] = float.NegativeInfinity;
+                    dtw[ii, jj] = float.PositiveInfinity;
             dtw[0, 0] = 0;
             for (int ii = 1; ii < m; ii++)
             {
                 for (int jj = Math.Max(1, ii - r); jj < Math.Min(m, ii + r); jj++)
                 {
-                    float cost = candidate[ii - 1].DotProduct(template[jj - 1]);
-                    float max = Math.Max(dtw[ii - 1, jj], Math.Max(dtw[ii, jj - 1], dtw[ii - 1, jj - 1]));
-                    dtw[ii, jj] = cost + max;
+                    float cost = 1-candidate[ii - 1].DotProduct(template[jj - 1]);
+                    float min = Math.Min(dtw[ii - 1, jj], Math.Min(dtw[ii, jj - 1], dtw[ii - 1, jj - 1]));
+                    dtw[ii, jj] = cost + min;
                 }
             }
 
-            return dtw[candidate.Count, template.Count] / m;
+            return dtw[candidate.Count, template.Count];
         }
 
 
@@ -240,6 +241,11 @@ namespace ActionVisualizer
             {
                 vecs.Add(pts[ii].Subtract(pts[ii - 1]).Normalize(2));
             }
+            Tuple<List<Vector<float>>, List<Vector<float>>> out_tuple = Envelop(vecs, r);
+            lower = out_tuple.Item1;
+            upper = out_tuple.Item2;
+
+            rejection = new List<float>();
         }
 
         public Gesture(List<Point> points, string label)
@@ -258,6 +264,11 @@ namespace ActionVisualizer
             {
                 vecs.Add(pts[ii].Subtract(pts[ii - 1]).Normalize(2));
             }
+            Tuple<List<Vector<float>>, List<Vector<float>>> out_tuple = Envelop(vecs, r);
+            lower = out_tuple.Item1;
+            upper = out_tuple.Item2;
+
+            rejection = new List<float>();
         }
 
         public Gesture(List<Vector<float>> temp, string label)
@@ -294,16 +305,20 @@ namespace ActionVisualizer
                 points.Add(Vector<float>.Build.DenseOfVector(v));
             List<Vector<float>> ret = new List<Vector<float>>();
             ret.Add(Vector<float>.Build.DenseOfVector(points[0]));
-            float I = PathLength(points) / (n - 1.0f);
+            float I = PathLength(points) / (n - 1.0f);          
             float D = 0.0f;
             int ii = 1;
-            while (ii < points.Count)
+            while (ii < points.Count && I > 0)
             {
                 float d = (float)points[ii].Subtract(points[ii - 1]).L2Norm();
                 if (D + d >= I)
                 {
                     Vector<float> vec = points[ii].Subtract(points[ii - 1]);
                     float t = (I - D) / d;
+
+                    if (float.IsNaN(t))
+                        t = 0.5f;
+
                     Vector<float> q = points[ii - 1] + t * vec;
                     ret.Add(q);
                     points.Insert(ii, q);

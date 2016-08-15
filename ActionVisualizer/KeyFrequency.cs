@@ -20,6 +20,7 @@ namespace ActionVisualizer
         public double speakerTheta;
         public double speakerAltitude;
         public double[] data;
+        public double[] stackedData;
 
         public bool isBoth;
 

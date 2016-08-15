@@ -70,6 +70,7 @@ namespace ActionVisualizer
         // Variables used for gesture recognition
         List<List<int>> history;
         List<List<int>> inverse_history;
+        List<double[]> data_history;
         PointCollection pointHist;
         StylusPointCollection S;
         int maxHistoryLength = 30;
@@ -123,6 +124,7 @@ namespace ActionVisualizer
             inverse_history = new List<List<int>>();
             pointHist = new PointCollection();
             point3DHist = new Point3DCollection();
+            data_history = new List<double[]>();
 
             bin = new int[buffersize * 2];
             sampledata = new float[buffersize * 2];
@@ -161,6 +163,7 @@ namespace ActionVisualizer
 
             history.Add(new List<int> { 0 });
             inverse_history.Add(new List<int> { 0 });
+            
 
             Log = new GestureTests.Logger("ActionVisualizer");            
             JK = new JackKnife();
@@ -220,6 +223,7 @@ namespace ActionVisualizer
                     _barcanvas.Children.Remove(r);
 
                 KF = new List<KeyFrequency>();
+                List<double> temp_data = new List<double>();
                 for (int i = 0; i < frequencies.Count; i++)
                 {
                     if (history[i].Count > 0)
@@ -245,12 +249,21 @@ namespace ActionVisualizer
                         prev_displacement[i] = displacement[i];
                     }
                     instant_displacement[i] = displacement[i];
-
                     history[i].Add(velocity[i]);
                     inverse_history[i].Add(KF[i].inverse_state);
+                    temp_data.AddRange(KF[i].data);
+
                     if (history[i].Count > maxHistoryLength)
+                    {
+                        inverse_history[i].RemoveAt(0);
                         history[i].RemoveAt(0);
+                    }
+
                 }
+                data_history.Add(temp_data.ToArray());
+                if (data_history.Count > maxHistoryLength)
+                    data_history.RemoveAt(0);    
+                            
                 detectGestures();
             }
         }
@@ -528,6 +541,7 @@ namespace ActionVisualizer
 
             history.Clear();
             inverse_history.Clear();
+            data_history.Clear();
 
             channelLabel = new int[selectedChannels];
             velocity = new int[selectedChannels];
@@ -709,9 +723,10 @@ namespace ActionVisualizer
             foreach (List<int> sublist in history)
                 sublist.Clear();
             foreach (List<int> sublist in inverse_history)
-                sublist.Clear();
+                sublist.Clear();          
             pointHist.Clear();
             point3DHist.Clear();
+            data_history.Clear();
 
             //prepare for next gesture (might need a button press)
             motion_free = 0;
@@ -720,8 +735,7 @@ namespace ActionVisualizer
         public void writeTo2DFile()
         {
             string DataPath = @"..\..\..\data\n001\";
-            string ImagePath = @"..\..\..\image\u001\";
-            string StrokePath = @"..\..\..\stroke\u001\";
+
             string searchPattern = gestureSelector.Text + "???";
             DirectoryInfo di = new DirectoryInfo(DataPath);
             FileInfo[] files = di.GetFiles(searchPattern);
@@ -762,6 +776,12 @@ namespace ActionVisualizer
             file.WriteLine("InverseVelocities: " + inverse_history[0].Count);
             for (int i = 0; i < inverse_history[0].Count; i++)
                 file.WriteLine(inverse_history[0][i] + "," + inverse_history[1][i]);
+
+
+            file.WriteLine();
+            file.WriteLine("Raw Data: " + data_history.Count);
+            for (int i = 0; i < data_history.Count; i++)
+                file.WriteLine(string.Join(",", data_history[i]));
 
             file.Flush();
             file.Close();
@@ -818,6 +838,12 @@ namespace ActionVisualizer
             file.WriteLine("InverseVelocities: " + inverse_history[0].Count);
             for (int i = 0; i < inverse_history[0].Count; i++)
                 file.WriteLine(inverse_history[0][i] + "," + inverse_history[1][i] + "," + inverse_history[2][i]);
+
+            file.WriteLine();
+            file.WriteLine("Raw Data: " + data_history.Count);
+            for (int i = 0; i < data_history.Count; i++)
+                file.WriteLine(string.Join(",", data_history[i]));
+
 
             file.Flush();
             file.Close();

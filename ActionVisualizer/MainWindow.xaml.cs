@@ -5,6 +5,7 @@ using NAudio.Wave;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using MathNet.Numerics;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -22,7 +23,7 @@ namespace ActionVisualizer
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : System.Windows.Window
     {
         // Audio IO
         private WasapiOut wOut;       

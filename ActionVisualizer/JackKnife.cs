@@ -9,16 +9,21 @@ using GestureTests.Util;
 using GestureTests.Types;
 using GestureTests.Experiment;
 using System.Windows;
+using MathNet.Numerics;
+using MathNet.Numerics.LinearAlgebra;
 
 namespace ActionVisualizer
 {
     class JackKnife
     {
         private List<Gesture> templates;
+        private float pruned, tested;
 
         public JackKnife()
         {
             templates = new List<Gesture>();
+            pruned = 0.0f;
+            tested = 0.0f;
         }
 
         public void InitializeFromFolder(string path)
@@ -52,14 +57,84 @@ namespace ActionVisualizer
 
             Add(new Gesture(points,label));
         }
-        
+
+        public void Add(List<Vector<float>> points, string label)
+        {
+            Add(new Gesture(points, label));
+        }
+
+        //Doesn't actually normalize but not going to refactor until Eugene does
+        public void Normalize()
+        {
+            Random rand = new Random();
+            if (templates.Count < 1)
+                return;
+            int n = templates[0].pts.Count() - 1;
+            int m = (n + 1) / 2;
+
+            for (int ii = 0; ii < 100; ii++)
+            {
+                List<Vector<float>> vecs = new List<Vector<float>>();
+                n = templates[0].pts.Count() - 1;
+                while (n > 0)
+                {
+                    int count = Math.Min(n, rand.Next(m, m));
+                    //Get random element from templates
+                    var t = templates.OrderBy(x => Guid.NewGuid()).FirstOrDefault();
+
+                    var start = rand.Next(0, t.vecs.Count - count);
+                    vecs.AddRange(t.vecs.GetRange(start, count));
+                    n -= count;
+                }
+                foreach (var t in templates)
+                {
+                    float score = DTW_Distance(t.vecs, vecs, Gesture.r);
+                    t.rejection.Add(score);
+                }
+            }
+
+            foreach (var t in templates)
+            {
+                float mean = t.rejection.Average();
+                float std = StdDev(t.rejection);
+                t.rejection_threshold = mean - 0.0f * std;
+            }
+        }
+
+        public Tuple<float, List<float>> UpperBound(Gesture candidate, Gesture template)
+        {
+            List<float> boundary = new List<float>();
+            for (int ii = 0;
+                ii < candidate.vecs.Count() &&
+                ii < template.lower.Count &&
+                ii < template.upper.Count();
+                ii++)
+            {
+                Vector<float> v1 = candidate.vecs[ii];
+                Vector<float> lower = template.lower[ii];
+                Vector<float> upper = template.upper[ii];
+
+                var v2 = Vector<float>.Build.SameAs(v1);
+                for (int jj = 0; jj < v2.Count(); jj++)
+                {
+                    if (v1[jj] > 0)
+                        v2[jj] = upper[jj];
+                    else
+                        v2[jj] = lower[jj];
+                }
+
+                boundary.Add(1.0f - Math.Min(1.0f, v1.DotProduct(v2)));
+            }
+            return new Tuple<float, List<float>>(boundary.Sum(), boundary);
+        }
+
         public Tuple<Gesture,float> Classify(Gesture candidate)
         {
             Gesture best = null;
             float best_score = float.NegativeInfinity;
             foreach (Gesture template in templates)
             {
-                float score = DTW_Distance(candidate, template, (int)(template.vecs.Count * .25f));
+                float score = DTW_Distance(candidate.vecs, template.vecs, (int)(template.vecs.Count * .25f));
                 if (score > best_score)
                 {
                     best = template;
@@ -69,10 +144,10 @@ namespace ActionVisualizer
             return new Tuple<Gesture, float>(best, best_score);
         }
 
-        public float DTW_Distance(Gesture candidate, Gesture template, int w)
+        public float DTW_Distance(List<Vector<float>> candidate, List<Vector<float>> template, int r)
         {
-            int m = candidate.vecs.Count+1, n = template.vecs.Count+1;
-            float[,] dtw = new float[m,n];
+            int m = candidate.Count + 1, n = candidate.Count + 1;
+            float[,] dtw = new float[m, n];
 
             for (int ii = 0; ii < m; ii++)
                 for (int jj = 0; jj < n; jj++)
@@ -80,81 +155,131 @@ namespace ActionVisualizer
             dtw[0, 0] = 0;
             for (int ii = 1; ii < m; ii++)
             {
-                for (int jj = Math.Max(1, ii - w); jj < Math.Min(m, ii + w); jj++)
+                for (int jj = Math.Max(1, ii - r); jj < Math.Min(m, ii + r); jj++)
                 {
-                    float cost = candidate.vecs[ii - 1] * template.vecs[jj - 1];
+                    float cost = candidate[ii - 1].DotProduct(template[jj - 1]);
                     float max = Math.Max(dtw[ii - 1, jj], Math.Max(dtw[ii, jj - 1], dtw[ii - 1, jj - 1]));
                     dtw[ii, jj] = cost + max;
-                }                   
+                }
             }
 
-            return dtw[candidate.vecs.Count, template.vecs.Count]/m;
+            return dtw[candidate.Count, template.Count] / m;
+        }
+
+
+        private float StdDev(IEnumerable<float> values)
+        {
+            float ret = 0;
+            if (values.Count() > 0)
+            {
+                //Compute the Average      
+                float avg = values.Average();
+                //Perform the Sum of (value-avg)_2_2      
+                float sum = (float)values.Sum(d => Math.Pow(d - avg, 2));
+                //Put it all together      
+                ret = (float)Math.Sqrt((sum) / (values.Count() - 1));
+            }
+            return ret;
         }
     }
     
     class Gesture
     {
-        static int resample_cnt = 16;
-        public string gname { get; set; }
-        public List<Vector2> raw_pts;
-        public List<Vector2> pts;
-        public List<Vector2> vecs;
+        public static int resample_cnt = 16;
+        public static int r = (resample_cnt / 10);
 
-        public Gesture(List<Vector2> temp, string label)
+        public string gname { get; set; }
+        public List<Vector<float>> raw_pts;
+        public List<Vector<float>> pts;
+        public List<Vector<float>> vecs;
+        public List<Vector<float>> lower, upper;
+
+        public List<float> rejection;
+        public float rejection_threshold;
+        public float bound;
+        internal List<float> boundary;
+
+        public Gesture(List<Vector2> points, string label)
         {
+            var temp = new List<Vector<float>>();
+            foreach (Vector2 p in points)
+            {
+                float[] data = { p.X, p.Y };
+                temp.Add(Vector<float>.Build.Dense(data));
+            }
             gname = label;
             raw_pts = temp;
-            pts = Resample(temp,resample_cnt);
-            vecs = new List<Vector2>();
+            pts = Resample(temp, resample_cnt);
+            vecs = new List<Vector<float>>();
             for (int ii = 1; ii < pts.Count; ii++)
             {
-                vecs.Add((pts[ii] - pts[ii - 1]).Normalize());
+                vecs.Add(pts[ii].Subtract(pts[ii - 1]).Normalize(2));
             }
         }
 
         public Gesture(List<Point> points, string label)
         {
-            List<Vector2> temp = new List<Vector2>();
+            var temp = new List<Vector<float>>();
             foreach (Point p in points)
-                temp.Add(new Vector2((float)p.X, (float)p.Y));
+            {
+                float[] data = { (float)p.X, (float)p.Y };
+                temp.Add(Vector<float>.Build.Dense(data));
+            }
             gname = label;
             raw_pts = temp;
             pts = Resample(temp, resample_cnt);
-            vecs = new List<Vector2>();
+            vecs = new List<Vector<float>>();
             for (int ii = 1; ii < pts.Count; ii++)
             {
-                vecs.Add((pts[ii] - pts[ii - 1]).Normalize());
+                vecs.Add(pts[ii].Subtract(pts[ii - 1]).Normalize(2));
             }
         }
 
-        private float PathLength(List<Vector2> points)
+        public Gesture(List<Vector<float>> temp, string label)
+        {
+            gname = label;
+            raw_pts = temp;
+            pts = Resample(temp, resample_cnt);
+            vecs = new List<Vector<float>>();
+            for (int ii = 1; ii < pts.Count; ii++)
+            {
+                vecs.Add(pts[ii].Subtract(pts[ii - 1]).Normalize(2));
+            }
+            Tuple<List<Vector<float>>, List<Vector<float>>> out_tuple = Envelop(vecs, r);
+            lower = out_tuple.Item1;
+            upper = out_tuple.Item2;
+
+            rejection = new List<float>();
+        }
+
+        private float PathLength(List<Vector<float>> points)
         {
             float length = 0;
             for (int ii = 1; ii < points.Count; ii++)
             {
-                length += (points[ii] - points[ii - 1]).Magnitude();
+                length += (float)points[ii].Subtract(points[ii - 1]).L2Norm();
             }
             return length;
         }
 
-        private List<Vector2> Resample(List<Vector2> temp, int n)
+        private List<Vector<float>> Resample(List<Vector<float>> temp, int n)
         {
-            List<Vector2> points = new List<Vector2>();
-            foreach (Vector2 v in temp)
-                points.Add(new Vector2(v.X, v.Y));
-            List<Vector2> ret = new List<Vector2>();
-            ret.Add(new Vector2(points[0].X, points[0].Y));
+            List<Vector<float>> points = new List<Vector<float>>();
+            foreach (Vector<float> v in temp)
+                points.Add(Vector<float>.Build.DenseOfVector(v));
+            List<Vector<float>> ret = new List<Vector<float>>();
+            ret.Add(Vector<float>.Build.DenseOfVector(points[0]));
             float I = PathLength(points) / (n - 1.0f);
             float D = 0.0f;
             int ii = 1;
             while (ii < points.Count)
             {
-                float d = (points[ii] - points[ii - 1]).Magnitude();
+                float d = (float)points[ii].Subtract(points[ii - 1]).L2Norm();
                 if (D + d >= I)
                 {
-                    Vector2 vec = points[ii] - points[ii - 1];
+                    Vector<float> vec = points[ii].Subtract(points[ii - 1]);
                     float t = (I - D) / d;
-                    Vector2 q = points[ii - 1] + vec*t;
+                    Vector<float> q = points[ii - 1] + t * vec;
                     ret.Add(q);
                     points.Insert(ii, q);
                     D = 0.0f;
@@ -170,5 +295,48 @@ namespace ActionVisualizer
             return ret;
         }
 
+        private Tuple<List<Vector<float>>, List<Vector<float>>> Envelop(List<Vector<float>> vecs, int r)
+        {
+            int n = vecs.Count;
+            int m = vecs[0].Count;
+
+            List<Vector<float>> upper = new List<Vector<float>>();
+            List<Vector<float>> lower = new List<Vector<float>>();
+
+            for (int ii = 0; ii < n; ii++)
+            {
+                Vector<float> maximum = Vector<float>.Build.Dense(m, float.NegativeInfinity);
+                Vector<float> minimum = Vector<float>.Build.Dense(m, float.PositiveInfinity);
+                for (int jj = Math.Max(0, ii - r); jj < Math.Min(ii + r + 1, n); jj++)
+                {
+                    maximum = Maximum(maximum, vecs[jj]);
+                    minimum = Minimum(minimum, vecs[jj]);
+                }
+                upper.Add(maximum);
+                lower.Add(minimum);
+            }
+
+            return new Tuple<List<Vector<float>>, List<Vector<float>>>(lower, upper);
+        }
+
+        private Vector<float> Maximum(Vector<float> a, Vector<float> b)
+        {
+            Vector<float> max = Vector<float>.Build.SameAs(a);
+            for (int ii = 0; ii < a.Count(); ii++)
+                max[ii] = Math.Max(a[ii], b[ii]);
+            return max;
+        }
+        private Vector<float> Minimum(Vector<float> a, Vector<float> b)
+        {
+            Vector<float> min = Vector<float>.Build.SameAs(a);
+            for (int ii = 0; ii < a.Count(); ii++)
+                min[ii] = Math.Min(a[ii], b[ii]);
+            return min;
+        }
+
+        public int CompareTo(Gesture other)
+        {
+            return bound.CompareTo(other.bound);
+        }
     }
 }

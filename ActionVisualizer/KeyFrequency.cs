@@ -19,7 +19,7 @@ namespace ActionVisualizer
 
         public double speakerTheta;
         public double speakerAltitude;
-        public double[] data;
+        public float[] data;
         public double[] stackedData;
 
         public bool isBoth;
@@ -36,7 +36,7 @@ namespace ActionVisualizer
             this.frequency = f;
             this.channel = c;
             this.radius = rad;
-            this.data = new double[radius * 2 + 1];
+            this.data = new float[radius * 2 + 1];
             Array.Copy(array, this.data, radius * 2 + 1 );
 
             isBoth = false;
@@ -49,7 +49,7 @@ namespace ActionVisualizer
             this.frequency = f;
             this.channel = c;
             this.radius = rad;
-            this.data = new double[radius * 2 + 1];
+            this.data = new float[radius * 2 + 1];
             
             //rescale numbers >=0
 
@@ -63,12 +63,12 @@ namespace ActionVisualizer
             }
             for (int i = 0; i < this.data.Length; i++)
             {
-                this.data[i] -= min;
+                this.data[i] -= (float) min;
                 if (this.data[i] > max)
                     max = this.data[i];
             }
             for (int i = 0; i < this.data.Length; i++)
-                this.data[i] /= max;
+                this.data[i] /= (float) max;
 
             isBoth = false;
             inverse_state = 0;
@@ -81,7 +81,7 @@ namespace ActionVisualizer
             this.frequency = f;
             this.channel = c;
             this.radius = rad;
-            this.data = new double[radius * 2 + 1];
+            this.data = new float[radius * 2 + 1];
 
             //rescale numbers >=0
 
@@ -89,18 +89,18 @@ namespace ActionVisualizer
             double max = Double.NegativeInfinity;
             for (int i = 0; i < this.data.Length; i++)
             {
-                this.data[i] = indata[center - rad + i];
+                this.data[i] = (float)indata[center - rad + i];
                 if (this.data[i] < min)
                     min = this.data[i];
             }
             for (int i = 0; i < this.data.Length; i++)
             {
-                this.data[i] -= min;
+                this.data[i] -= (float) min;
                 if (this.data[i] > max)
                     max = this.data[i];
             }
             for (int i = 0; i < this.data.Length; i++)
-                this.data[i] /= max;
+                this.data[i] /= (float) max;
 
             isBoth = false;
             inverse_state = 0;

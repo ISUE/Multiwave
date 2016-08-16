@@ -127,6 +127,7 @@ namespace GestureTests.Data
             List<Vector2> velocities = new List<Vector2>();
             List<Vector2> inverseVelocities = new List<Vector2>();
             List<Vector2> strokePoints = new List<Vector2>();
+            List<float[]> raw_data = new List<float[]>();
             List<float> angles = new List<float>();            
             try
             {
@@ -217,12 +218,22 @@ namespace GestureTests.Data
                                 inverseVelocities.Add(new Vector2(float.Parse(xy[0]), float.Parse(xy[1])));
                             }
                             break;
+                        case "RawData:":
+                            int numRawData = int.Parse(tokens[1]);
+
+                            //read datapoints from succeeding lines.
+                            for (int i = 0; i < numRawData; ++i)
+                            {
+                                string point = reader.ReadLine();                               
+                                raw_data.Add(Array.ConvertAll(point.Split(','), float.Parse));
+                            }
+                            break;
                     }
                 }
                 if (strokePoints.Count == 0)
                     strokePoints = GenerateStroke(interpretedPoints);
                 reader.Close();
-                sample = new GestureSample(gesture, rightHanded, duration, angles, interpretedPoints, strokePoints, velocities, inverseVelocities);
+                sample = new GestureSample(gesture, rightHanded, duration, angles, interpretedPoints, strokePoints, velocities, inverseVelocities, raw_data);
                 sample.ComputeFeatures(Config.FeaturesToUse);
             }
             catch (Exception e)
@@ -249,6 +260,7 @@ namespace GestureTests.Data
             List<Vector3> strokePoints = new List<Vector3>();
             List<float> angles = new List<float>();
             List<float> elevations = new List<float>();
+            List<float[]> raw_data = new List<float[]>();
 
             try
             {
@@ -348,12 +360,22 @@ namespace GestureTests.Data
                                 inverseVelocities.Add(new Vector3(float.Parse(xyz[0]), float.Parse(xyz[1]), float.Parse(xyz[2])));
                             }
                             break;
+                        case "RawData:":
+                            int numRawData = int.Parse(tokens[1]);
+
+                            //read datapoints from succeeding lines.
+                            for (int i = 0; i < numRawData; ++i)
+                            {
+                                string point = reader.ReadLine();
+                                raw_data.Add(Array.ConvertAll(point.Split(','), float.Parse));
+                            }
+                            break;
                     }
                 }
                 if (strokePoints.Count == 0)
                     strokePoints = Generate3DStroke(interpretedPoints);
                 reader.Close();
-                sample = new GestureSample(gesture, rightHanded, duration, angles, elevations, interpretedPoints, strokePoints, velocities, inverseVelocities);
+                sample = new GestureSample(gesture, rightHanded, duration, angles, elevations, interpretedPoints, strokePoints, velocities, inverseVelocities, raw_data);
                 sample.ComputeFeatures(Config.FeaturesToUse);
             }
             catch (Exception e)

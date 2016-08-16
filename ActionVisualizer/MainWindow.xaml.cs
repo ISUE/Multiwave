@@ -2,6 +2,7 @@
 using GestureTests.Util;
 using NAudio.Dsp;
 using NAudio.Wave;
+using MathNet.Numerics;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,7 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
-
+using MathNet.Numerics.LinearAlgebra;
 
 namespace ActionVisualizer
 {
@@ -70,7 +71,7 @@ namespace ActionVisualizer
         // Variables used for gesture recognition
         List<List<int>> history;
         List<List<int>> inverse_history;
-        List<double[]> data_history;
+        List<float[]> data_history;
         PointCollection pointHist;
         StylusPointCollection S;
         int maxHistoryLength = 30;
@@ -124,7 +125,7 @@ namespace ActionVisualizer
             inverse_history = new List<List<int>>();
             pointHist = new PointCollection();
             point3DHist = new Point3DCollection();
-            data_history = new List<double[]>();
+            data_history = new List<float[]>();
 
             bin = new int[buffersize * 2];
             sampledata = new float[buffersize * 2];
@@ -223,7 +224,7 @@ namespace ActionVisualizer
                     _barcanvas.Children.Remove(r);
 
                 KF = new List<KeyFrequency>();
-                List<double> temp_data = new List<double>();
+                List<float> temp_data = new List<float>();
                 for (int i = 0; i < frequencies.Count; i++)
                 {
                     if (history[i].Count > 0)
@@ -660,12 +661,18 @@ namespace ActionVisualizer
                     {
                         List<Tuple<Gesture, float>> results = new List<Tuple<Gesture, float>>();
                         List<Vector2> StylusPoints = new List<Vector2>();
+                        List<Vector<float>> data = new List<Vector<float>>();
                         foreach (StylusPoint P in S)
                             StylusPoints.Add(new Vector2((float)P.X, (float)P.Y));
+                        foreach (float[] temp in data_history)
+                        {
+                            data.Add(Vector<float>.Build.DenseOfArray(temp));
+                        }
 
                         for (int ii = 5; ii < pointHist.Count; ii+=5)
-                        {                                                      
-                            Tuple<Gesture, float> temp = JK.Classify(new Gesture(StylusPoints.GetRange(StylusPoints.Count - ii - 1, ii), "unknown"));
+                        {
+                            Tuple<Gesture, float> temp = JK.Classify(new Gesture(data.GetRange(data.Count - ii - 1, ii), "unknown"));
+                            //Tuple<Gesture, float> temp = JK.Classify(new Gesture(StylusPoints.GetRange(StylusPoints.Count - ii - 1, ii), "unknown"));
                             results.Add(temp);
                         }
 
@@ -779,7 +786,7 @@ namespace ActionVisualizer
 
 
             file.WriteLine();
-            file.WriteLine("Raw Data: " + data_history.Count);
+            file.WriteLine("RawData: " + data_history.Count);
             for (int i = 0; i < data_history.Count; i++)
                 file.WriteLine(string.Join(",", data_history[i]));
 
@@ -840,7 +847,7 @@ namespace ActionVisualizer
                 file.WriteLine(inverse_history[0][i] + "," + inverse_history[1][i] + "," + inverse_history[2][i]);
 
             file.WriteLine();
-            file.WriteLine("Raw Data: " + data_history.Count);
+            file.WriteLine("RawData: " + data_history.Count);
             for (int i = 0; i < data_history.Count; i++)
                 file.WriteLine(string.Join(",", data_history[i]));
 

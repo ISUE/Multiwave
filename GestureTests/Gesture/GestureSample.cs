@@ -63,7 +63,10 @@ namespace GestureTests.Gesture
         public List<Vector2> InverseVelocities { get; protected set; }
 
         public List<Vector2> InversePoints{ get; protected set; }
-        
+
+        public List<float[]> RawData { get; protected set; }
+
+
         public List<float> SpeakerElevations { get; protected set; }
         public List<Vector3> InterpretedPoints3D { get; protected set; }
         public List<Vector3> StrokePoints3D { get; protected set; }
@@ -82,7 +85,7 @@ namespace GestureTests.Gesture
         public float[] Features { get; protected set; }
 
         //sample = new GestureSample(gesture, rightHanded, duration, angles, interpretedPoints, velocities, inverseVelocities);
-        public GestureSample(GestureType gType, bool rightHanded, float duration, List<float> angles, List<Vector2> interpretedPoints, List<Vector2> strokePoints, List<Vector2> velocities, List<Vector2> inverseVelocities)
+        public GestureSample(GestureType gType, bool rightHanded, float duration, List<float> angles, List<Vector2> interpretedPoints, List<Vector2> strokePoints, List<Vector2> velocities, List<Vector2> inverseVelocities, List<float[]> raw_data)
         {
             Gesture = gType;
             Duration = duration;
@@ -113,9 +116,12 @@ namespace GestureTests.Gesture
                 P.Y += (float)(velocity_pair.Y * Math.Cos(SpeakerAngles[1] * Math.PI / 180.0));
                 InversePoints.Add(P);
             }
+
+            RawData = new List<float[]>();
+            RawData.AddRange(raw_data);
         }
 
-        public GestureSample(GestureType gesture, bool rightHanded, float duration, List<float> angles, List<float> elevations, List<Vector3> interpretedPoints, List<Vector3> strokePoints, List<Vector3> velocities, List<Vector3> inverseVelocities)
+        public GestureSample(GestureType gesture, bool rightHanded, float duration, List<float> angles, List<float> elevations, List<Vector3> interpretedPoints, List<Vector3> strokePoints, List<Vector3> velocities, List<Vector3> inverseVelocities, List<float[]> raw_data)
         {
             // TODO: Complete member initialization
             Gesture = gesture;
@@ -156,6 +162,10 @@ namespace GestureTests.Gesture
                 
                 InversePoints3D.Add(P);
             }
+
+
+            RawData = new List<float[]>();
+            RawData.AddRange(raw_data);
         }
 
         /// <summary>

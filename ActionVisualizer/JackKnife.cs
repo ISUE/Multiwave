@@ -40,6 +40,24 @@ namespace ActionVisualizer
             Normalize();   
         }
 
+        public void InitializeRawFromFolder(string path)
+        {
+            List<UserDataSet> alldata = DataLoader.LoadGestureDataFrom(path);
+            foreach (UserDataSet ud in alldata)
+            {
+                foreach (GestureSample gs in ud.TrainingSamples)
+                {
+                    List<Vector<float>> data = new List<Vector<float>>();
+                    foreach (var rd in gs.RawData)
+                        data.Add(Vector<float>.Build.DenseOfArray(rd));
+
+                    Add(data, gs.Gesture.ToString());
+                }
+                break;
+            }
+            Normalize();
+        }
+
         public void Add(Gesture alpha)
         {
             templates.Add(alpha);            

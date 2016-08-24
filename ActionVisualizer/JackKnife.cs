@@ -206,6 +206,43 @@ namespace ActionVisualizer
             return new Tuple<Gesture, float>(best, best_score);
         }
 
+        public List<Tuple<Gesture, float>> Classify(Gesture candidate, int k)
+        {
+
+            var outList = new List<Tuple<Gesture, float>>();
+            var temp_templates = templates;
+
+            foreach (var t in temp_templates)
+            {
+                var out_tuple = UpperBound(candidate, t);
+                t.bound = out_tuple.Item1;
+                t.boundary = out_tuple.Item2;
+            }
+
+            temp_templates = temp_templates.OrderBy(x => x.bound).ToList();
+
+
+            float best_score = float.PositiveInfinity;
+            foreach (Gesture template in temp_templates)
+            {
+                tested += 1.0f;
+                if (template.bound > best_score || template.bound > template.rejection_threshold)
+                {
+                    pruned += 1.0f;
+                    continue;
+                }
+
+                float score = DTW_Distance(candidate.vecs, template.vecs, Gesture.r);
+
+                if (score >= template.rejection_threshold)
+                    continue;
+
+                outList.Add(new Tuple<Gesture, float>(template, score));
+            }
+            outList.Sort((x, y) => x.Item2.CompareTo(y.Item2));
+            return outList.GetRange(0, Math.Min(k,outList.Count()));
+        }
+
 
         public float DTW_Distance(List<Vector<float>> candidate, List<Vector<float>> template, int r)
         {

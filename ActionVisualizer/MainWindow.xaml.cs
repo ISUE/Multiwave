@@ -168,7 +168,8 @@ namespace ActionVisualizer
 
             Log = new GestureTests.Logger("ActionVisualizer");            
             JK = new JackKnife();
-            JK.InitializeRawFromFolder(GestureTests.Config.DataPath);
+            //JK.InitializeRawFromFolder(GestureTests.Config.DataPath);
+            JK.InitializeFromFolder(GestureTests.Config.DataPath);
         }
 
         void waveIn_DataAvailable(object sender, WaveInEventArgs e)
@@ -674,8 +675,8 @@ namespace ActionVisualizer
 
                         for (int ii = 5; ii < pointHist.Count; ii+=5)
                         {
-                            Tuple<Gesture, float> temp = JK.Classify(new Gesture(data.GetRange(data.Count - ii - 1, ii), "unknown"));
-                            //Tuple<Gesture, float> temp = JK.Classify(new Gesture(StylusPoints.GetRange(StylusPoints.Count - ii - 1, ii), "unknown"));
+                            //Tuple<Gesture, float> temp = JK.Classify(new Gesture(data.GetRange(data.Count - ii - 1, ii), "unknown"));
+                            Tuple<Gesture, float> temp = JK.Classify(new Gesture(StylusPoints.GetRange(StylusPoints.Count - ii - 1, ii), "unknown"));
                             results.Add(temp);
                         }
 

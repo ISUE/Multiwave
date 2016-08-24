@@ -709,7 +709,7 @@ namespace ActionVisualizer
                     {               
                         gestureDetected.Text = "";
                     }
-                    if (selectedChannels == 6)
+                    if (selectedChannels == 5)
                     {
                         gestureDetected.Text = "";
                     }

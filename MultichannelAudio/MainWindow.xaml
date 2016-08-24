@@ -65,11 +65,7 @@
             <ComboBoxItem Content="1"/>
             <ComboBoxItem Content="2"/>
             <ComboBoxItem Content="3"/>
-            <ComboBoxItem Content="4"/>
             <ComboBoxItem Content="5"/>
-            <ComboBoxItem Content="6"/>
-            <ComboBoxItem Content="7"/>
-            <ComboBoxItem Content="8"/>
         </ComboBox>
         <TextBlock Grid.Column="2" Grid.Row="2" Height="23" FontSize="14" HorizontalAlignment="Center" Name="gestureDetected" Text="Gesture" VerticalAlignment="Center" />
     </Grid>

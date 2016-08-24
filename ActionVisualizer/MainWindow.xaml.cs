@@ -32,7 +32,7 @@ namespace ActionVisualizer
         public int waveOutChannels;
 
         // Empirically determined minimum frequency for two speaker configurations. 
-        public int minFrequency = 18200;
+        public int minFrequency = 17000;
         public int frequencyStep = 500;
 
         // Length of buffer gives ~24 hz updates.
@@ -168,7 +168,7 @@ namespace ActionVisualizer
 
             Log = new GestureTests.Logger("ActionVisualizer");            
             JK = new JackKnife();
-            JK.InitializeRawFromFolder(GestureTests.Config.DataPath);
+            JK.InitializeFromFolder(GestureTests.Config.DataPath);
         }
 
         void waveIn_DataAvailable(object sender, WaveInEventArgs e)
@@ -263,9 +263,8 @@ namespace ActionVisualizer
                 }
                 data_history.Add(temp_data.ToArray());
                 if (data_history.Count > maxHistoryLength)
-                {
-                    data_history.RemoveAt(0);
-                }
+                    data_history.RemoveAt(0);    
+                            
                 detectGestures();
             }
         }
@@ -439,12 +438,10 @@ namespace ActionVisualizer
                 List<IWaveProvider> inputs = new List<IWaveProvider>();
                 frequencies = new List<int>();
                 centerbins = new List<int>();
-
-                var tempSelectedChannels = selectedChannels > 3 ? selectedChannels + 1 : selectedChannels;
-
+                int tempSelectedChannels = selectedChannels >= 3 ? selectedChannels + 1 : selectedChannels;
                 for (int c = 0; c < tempSelectedChannels; c++)
                 {
-                    if (c >=4)
+                    if (c >= 4)
                     {
                         //Make LR/RR speakers fit in frequency space.
                         inputs.Add(new SineWaveProvider32(minFrequency + ((c - 1) * frequencyStep), 1.0f, 44100, 1));
@@ -452,13 +449,15 @@ namespace ActionVisualizer
                         frequencies.Add(minFrequency + ((c - 1) * frequencyStep));
                         centerbins.Add((int)Math.Round((minFrequency + ((c - 1) * frequencyStep)) / 10.768));    
                     }
-                    else if (c == 3)
+                    else if (c == 2)
                     {
                         //Make LR/RR speakers fit in frequency space.
-                        inputs.Add(new SineWaveProvider32(minFrequency + ((c - 1) * frequencyStep), 0.0f, 44100, 1));
+                        inputs.Add(new SineWaveProvider32(minFrequency + (c * frequencyStep), 1.0f, 44100, 1));
                         //inputs.Add(new SineWaveProvider32(18000 + c * 700, 1f, 44100, 1));
-                        //frequencies.Add(minFrequency + ((c - 1) * frequencyStep));
-                        //centerbins.Add((int)Math.Round((minFrequency + ((c - 1) * frequencyStep)) / 10.768));                        
+                        frequencies.Add(minFrequency + (c * frequencyStep));
+                        centerbins.Add((int)Math.Round((minFrequency + ((c) * frequencyStep)) / 10.768));
+                        c++;
+                        inputs.Add(new SineWaveProvider32(minFrequency + ((c-1) * frequencyStep), 0.0f, 44100, 1));
                     }
                     else
                     {
@@ -469,7 +468,8 @@ namespace ActionVisualizer
                     }
                 }
 
-                var splitter = new MultiplexingWaveProvider(inputs, tempSelectedChannels);
+                MultiplexingWaveProvider splitter = new MultiplexingWaveProvider(inputs, tempSelectedChannels);                
+
                 try
                 {
                     wOut.Init(splitter);
@@ -538,7 +538,9 @@ namespace ActionVisualizer
             if (wOut != null)
                 StartStopSineWave();
 
-            selectedChannels = Int32.Parse(((sender as ComboBox).SelectedItem as ComboBoxItem).Content.ToString());
+            ComboBox sendercb = sender as ComboBox;
+            int channelstemp = sendercb.SelectedIndex;        
+            selectedChannels = int.Parse((sendercb.Items[channelstemp] as ComboBoxItem).Content.ToString());
 
             _ink.Visibility = Visibility.Visible;
     
@@ -674,14 +676,19 @@ namespace ActionVisualizer
 
                         for (int ii = 5; ii < pointHist.Count; ii+=5)
                         {
-                            Tuple<Gesture, float> temp = JK.Classify(new Gesture(data.GetRange(data.Count - ii - 1, ii), "unknown"));
-                            //Tuple<Gesture, float> temp = JK.Classify(new Gesture(StylusPoints.GetRange(StylusPoints.Count - ii - 1, ii), "unknown"));
+                            //Tuple<Gesture, float> temp = JK.Classify(new Gesture(data.GetRange(data.Count - ii - 1, ii), "unknown"));
+                            Tuple<Gesture, float> temp = JK.Classify(new Gesture(StylusPoints.GetRange(StylusPoints.Count - ii - 1, ii), "unknown"));
                             results.Add(temp);
                         }
 
-                        Tuple<Gesture, float> best = results.OrderByDescending(item => item.Item2).Last();
+                        Tuple<Gesture, float> best = results[0];
+                        foreach (Tuple<Gesture,float> result in results)
+                        {
+                            if (result.Item2 >= result.Item2)
+                                best = result;
+                        }
 
-                        if (best.Item1 == null || best.Item2 > .65*Gesture.resample_cnt) return;
+                        if (best.Item1 == null || best.Item2 < 1.5f) return;
 
                         switch (best.Item1.gname)
                         {
@@ -709,7 +716,7 @@ namespace ActionVisualizer
                     {               
                         gestureDetected.Text = "";
                     }
-                    if (selectedChannels == 6)
+                    if (selectedChannels == 5)
                     {
                         gestureDetected.Text = "";
                     }
@@ -739,7 +746,7 @@ namespace ActionVisualizer
 
         public void writeTo2DFile()
         {
-            string DataPath = @"..\..\..\data\a001\";
+            string DataPath = @"..\..\..\data\n001\";
 
             string searchPattern = gestureSelector.Text + "???";
             DirectoryInfo di = Directory.CreateDirectory(DataPath);
@@ -794,7 +801,7 @@ namespace ActionVisualizer
 
         public void writeTo3DFile()
         {
-            string DataPath = @"..\..\..\data6D\a001\";
+            string DataPath = @"..\..\..\data6D\n001\";
             string searchPattern = gestureSelector.Text + "???";
             DirectoryInfo di = Directory.CreateDirectory(DataPath);
             FileInfo[] files = di.GetFiles(searchPattern);
@@ -867,11 +874,6 @@ namespace ActionVisualizer
             if (e.Key == Key.C)
             {
                 _ink.Strokes.Clear();
-            }
-
-            if (e.Key == Key.E)
-            {
-                Console.WriteLine("Error Rate of Dataset: " + JK.CrossValidateDataset());
             }
 
             if (e.Key == Key.M)

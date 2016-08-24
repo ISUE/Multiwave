@@ -57,25 +57,6 @@ namespace ActionVisualizer
             }
             Normalize();
         }
-        
-        public float CrossValidateDataset()
-        {
-            float errors = 0;
-            for(int ii = 0; ii < templates.Count; ii++)
-            {
-                Gesture candidate = templates[ii];
-                templates.RemoveAt(ii);
-
-                var result = Classify(candidate);
-                if (result.Item1.gname != candidate.gname)
-                {
-                    Console.WriteLine(result.Item1.gname + " " + candidate.gname);
-                    errors++;
-                }
-                templates.Insert(ii, candidate);
-            }
-            return errors / (templates.Count);
-        }   
 
         public void Add(Gesture alpha)
         {
@@ -168,7 +149,7 @@ namespace ActionVisualizer
 
         public Tuple<Gesture, float> Classify(Gesture candidate)
         {
-            Gesture best = new Gesture(candidate.raw_pts, "");
+            Gesture best = null;
 
             var temp_templates = templates;
 

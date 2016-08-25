@@ -285,8 +285,8 @@ namespace ActionVisualizer
     
     class Gesture
     {
-        public static int resample_cnt = 16;
-        public static int r = (resample_cnt / 10);
+        public static int resample_cnt = 20;
+        public static int r = 4;//(resample_cnt / 10);
 
         public string gname { get; set; }
         public List<Vector<float>> raw_pts;

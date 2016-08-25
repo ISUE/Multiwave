@@ -90,6 +90,8 @@ namespace ActionVisualizer
         GestureTests.Logger Log;
 
         JackKnife JK;
+        private string prev2 = "";
+        private string prev = "";
 
         public MainWindow()
         {
@@ -168,8 +170,8 @@ namespace ActionVisualizer
 
             Log = new GestureTests.Logger("ActionVisualizer");            
             JK = new JackKnife();
-            //JK.InitializeRawFromFolder(GestureTests.Config.DataPath);
-            JK.InitializeFromFolder(GestureTests.Config.DataPath);
+            JK.InitializeRawFromFolder(GestureTests.Config.DataPath);
+            //JK.InitializeFromFolder(GestureTests.Config.DataPath);
         }
 
         void waveIn_DataAvailable(object sender, WaveInEventArgs e)
@@ -664,46 +666,55 @@ namespace ActionVisualizer
                     if (selectedChannels == 2)
                     {
                         List<Tuple<Gesture, float>> results = new List<Tuple<Gesture, float>>();
-                        List<Vector2> StylusPoints = new List<Vector2>();
+                        //List<Vector2> StylusPoints = new List<Vector2>();
                         List<Vector<float>> data = new List<Vector<float>>();
-                        foreach (StylusPoint P in S)
-                            StylusPoints.Add(new Vector2((float)P.X, (float)P.Y));
+                        //foreach (StylusPoint P in S)
+                        //    StylusPoints.Add(new Vector2((float)P.X, (float)P.Y));
                         foreach (float[] temp in data_history)
                         {
                             data.Add(Vector<float>.Build.DenseOfArray(temp));
                         }
 
-                        for (int ii = 5; ii < pointHist.Count; ii+=5)
+                        for (int ii = 5; ii < pointHist.Count; ii+=5) //30
                         {
-                            //Tuple<Gesture, float> temp = JK.Classify(new Gesture(data.GetRange(data.Count - ii - 1, ii), "unknown"));
-                            Tuple<Gesture, float> temp = JK.Classify(new Gesture(StylusPoints.GetRange(StylusPoints.Count - ii - 1, ii), "unknown"));
+                            Tuple<Gesture, float> temp = JK.Classify(new Gesture(data.GetRange(data.Count - ii - 1, ii), "unknown"));
+                            //Tuple<Gesture, float> temp = JK.Classify(new Gesture(StylusPoints.GetRange(StylusPoints.Count - ii - 1, ii), "unknown"));
                             results.Add(temp);
                         }
 
                         Tuple<Gesture, float> best = results.OrderByDescending(item => item.Item2).Last();
 
-                        if (best.Item1 == null || best.Item2 > .65*Gesture.resample_cnt) return;
 
-                        switch (best.Item1.gname)
+                        if (best.Item1 == null || best.Item2 > .60 * Gesture.resample_cnt || (prev2 != prev || prev != best.Item1.gname || prev2 != best.Item1.gname))
                         {
-                            case "swipe_up":
-                                gestureDetected.Text = "swipe_forward";
-                                break;
-                            case "swipe_down":
-                                gestureDetected.Text = "swipe_back";
-                                break;
-                            case "tap_up":
-                                gestureDetected.Text = "tap_forward";
-                                break;
-                            case "tap_down":
-                                gestureDetected.Text = "tap_back";
-                                break;
-                            default:
-                                gestureDetected.Text = best.Item1.gname;
-                                break;
+                        }
+                        else
+                        {
+                            switch (best.Item1.gname)
+                            {
+                                case "swipe_up":
+                                    gestureDetected.Text = "swipe_forward";
+                                    break;
+                                case "swipe_down":
+                                    gestureDetected.Text = "swipe_back";
+                                    break;
+                                case "tap_up":
+                                    gestureDetected.Text = "tap_forward";
+                                    break;
+                                case "tap_down":
+                                    gestureDetected.Text = "tap_back";
+                                    break;
+                                default:
+                                    gestureDetected.Text = best.Item1.gname;
+                                    break;
+                            }
+                            gestureDetected.Text += "\n" + best.Item2.ToString();
+
                         }
 
-                        gestureDetected.Text += "\n" + best.Item2.ToString();
+                        prev2 = prev;
+                        prev = best.Item1.gname;
+                        return;
 
                     }
                     if (selectedChannels == 3)

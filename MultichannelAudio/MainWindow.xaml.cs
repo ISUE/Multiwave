@@ -30,6 +30,10 @@ namespace MultichannelAudio
         private WasapiOut wOut;
         private WaveIn waveIn;
 
+        // Empirically determined minimum frequency for two speaker configurations. 
+        public int minFrequency = 18200;
+        public int frequencyStep = 500;
+
         public int waveOutChannels;        
 
         public int buffersize = 2048;
@@ -301,62 +305,63 @@ namespace MultichannelAudio
             if (wOut == null)
             {
                 button1.Content = "Stop Sound";
-                //string str = channelSelector.Text;
-                //selectedChannels = Int32.Parse(str);
                 Console.WriteLine("User Selected Channels: " + selectedChannels);
-                WaveOutCapabilities outdeviceInfo = WaveOut.GetCapabilities(0);                
+                WaveOutCapabilities outdeviceInfo = WaveOut.GetCapabilities(0);
                 waveOutChannels = outdeviceInfo.Channels;
                 wOut = new WasapiOut(NAudio.CoreAudioApi.AudioClientShareMode.Shared, 0);
+
                 int waveOutDevices = WaveOut.DeviceCount;
-                for(int i = 0; i< waveOutDevices; i++)
+                for (int i = 0; i < waveOutDevices; i++)
                 {
                     outdeviceInfo = WaveOut.GetCapabilities(i);
                     Console.WriteLine("Device {0}: {1}, {2} channels",
                             i, outdeviceInfo.ProductName, outdeviceInfo.Channels);
                 }
 
-                /*
-                var sineWaveProvider = new SineWaveProvider32();
-                sineWaveProvider.SetWaveFormat(44100, 1); // 44.1kHz mono
-                sineWaveProvider.Frequency = 19000;
-                sineWaveProvider.Amplitude = 0.25f;
-                var sineWaveProvider2 = new SineWaveProvider32();
-                sineWaveProvider2.SetWaveFormat(44100, 1); // 44.1kHz mono
-                sineWaveProvider2.Frequency = 18000;
-                sineWaveProvider2.Amplitude = 0.25f;
-                
-                List<IWaveProvider> inputs = new List<IWaveProvider>();
-                inputs.Add(sineWaveProvider);
-                inputs.Add(sineWaveProvider2);
-                */
-
                 List<IWaveProvider> inputs = new List<IWaveProvider>();
                 frequencies = new List<int>();
                 centerbins = new List<int>();
-                //Foutstream = new List<StreamWriter>();
-                for (int c = 0; c < selectedChannels; c++)
+
+                var tempSelectedChannels = selectedChannels > 3 ? selectedChannels + 1 : selectedChannels;
+
+                for (int c = 0; c < tempSelectedChannels; c++)
                 {
-                    inputs.Add(new SineWaveProvider32(18000+c*700, 0.25f, 44100, 1));
-                    frequencies.Add(18000+c*700);
-                    centerbins.Add((int)Math.Round((18000 + c * 700) / 10.768));                  
-                    
-                    Console.WriteLine(centerbins.ElementAt(c));                    
+                    if (c >= 4)
+                    {
+                        //Make LR/RR speakers fit in frequency space.
+                        inputs.Add(new SineWaveProvider32(minFrequency + ((c - 1) * frequencyStep), 1.0f, 44100, 1));
+                        //inputs.Add(new SineWaveProvider32(18000 + c * 700, 1f, 44100, 1));
+                        frequencies.Add(minFrequency + ((c - 1) * frequencyStep));
+                        centerbins.Add((int)Math.Round((minFrequency + ((c - 1) * frequencyStep)) / 10.768));
+                    }
+                    else if (c == 3)
+                    {
+                        //Make LR/RR speakers fit in frequency space.
+                        inputs.Add(new SineWaveProvider32(minFrequency + ((c - 1) * frequencyStep), 0.0f, 44100, 1));
+                        //inputs.Add(new SineWaveProvider32(18000 + c * 700, 1f, 44100, 1));
+                        //frequencies.Add(minFrequency + ((c - 1) * frequencyStep));
+                        //centerbins.Add((int)Math.Round((minFrequency + ((c - 1) * frequencyStep)) / 10.768));                        
+                    }
+                    else
+                    {
+                        //Original Sine Wave generation
+                        inputs.Add(new SineWaveProvider32(minFrequency + c * frequencyStep, 0.5f, 44100, 1));
+                        frequencies.Add(minFrequency + c * frequencyStep);
+                        centerbins.Add((int)Math.Round((minFrequency + c * frequencyStep) / 10.768));
+                    }
                 }
 
-                var splitter = new MultiplexingWaveProvider(inputs, selectedChannels);
+                var splitter = new MultiplexingWaveProvider(inputs, tempSelectedChannels);
                 try
                 {
                     wOut.Init(splitter);
                     wOut.Play();
                 }
-                catch(System.ArgumentException)
+                catch (System.ArgumentException)
                 {
                     Console.WriteLine("Invalid audio channel count. Please select a lower number of audio channels");
                 }
-                //waveOut = new WaveOut();
-                //waveOut.Init(sineWaveProvider);                    
-                //waveOut.Init(splitter);
-                
+
                 Console.WriteLine("Number of Channels: " + wOut.OutputWaveFormat.Channels);
             }
             else
@@ -364,11 +369,10 @@ namespace MultichannelAudio
                 wOut.Stop();
                 wOut.Dispose();
                 wOut = null;
-                button1.Content = "Generate Sound";
+                button1.Content = "Start Sound";
 
                 frequencies.Clear();
                 centerbins.Clear();
-                //Foutstream.Clear();
             }
         }
 
@@ -484,7 +488,7 @@ namespace MultichannelAudio
         
         private void channelSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            selectedChannels = (sender as ComboBox).SelectedIndex + 1;
+            selectedChannels = Int32.Parse(((sender as ComboBox).SelectedItem as ComboBoxItem).Content.ToString());
             //selectedChannels = Int32.Parse(str);
             channelLabel = new int[selectedChannels];
             velocity = new int[selectedChannels];
@@ -501,6 +505,10 @@ namespace MultichannelAudio
                 bars[i] = createBar(i+1, selectedChannels, 0, 33);
             }
 
+            if (selectedChannels <= 2)
+                minFrequency = 18200;
+            else if (selectedChannels >= 3)
+                minFrequency = 17000;
         }
 
         private Rectangle createBar(int channel, int cmax, int velocity, int vmax)

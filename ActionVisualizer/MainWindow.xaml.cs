@@ -105,7 +105,7 @@ namespace ActionVisualizer
                 Console.WriteLine("Device {0}: {1}, {2} channels",
                     waveInDevice, deviceInfo.ProductName, deviceInfo.Channels);
             }
-
+            
             waveIn = new WaveIn();
             waveIn.BufferMilliseconds = 47 * buffersize / 2048;
             waveIn.DeviceNumber = 0;
@@ -585,6 +585,11 @@ namespace ActionVisualizer
                 lines[i] = createLine(i + 1, selectedChannels);
                 _barcanvas.Children.Add(lines[i]);
             }
+
+            if (selectedChannels <= 2)
+                minFrequency = 18200;
+            else if (selectedChannels >= 3)
+                minFrequency = 17000;
 
         }
 

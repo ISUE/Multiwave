@@ -11,6 +11,7 @@ using GestureTests.Experiment;
 using System.Windows;
 using MathNet.Numerics;
 using MathNet.Numerics.LinearAlgebra;
+using System.Threading;
 
 namespace ActionVisualizer
 {
@@ -45,8 +46,11 @@ namespace ActionVisualizer
             List<UserDataSet> alldata = DataLoader.LoadGestureDataFrom(path);
             foreach (UserDataSet ud in alldata)
             {
+                int temp = 0;                
                 foreach (GestureSample gs in ud.TrainingSamples)
                 {
+                    temp++;
+
                     List<Vector<float>> data = new List<Vector<float>>();
                     foreach (var rd in gs.RawData)
                         data.Add(Vector<float>.Build.DenseOfArray(rd));

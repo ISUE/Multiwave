@@ -266,6 +266,27 @@ namespace ActionVisualizer
             return dtw[candidate.Count, template.Count];
         }
 
+        public float DTW_Distance_Max(List<Vector<float>> candidate, List<Vector<float>> template, int r)
+        {
+            int m = candidate.Count + 1, n = candidate.Count + 1;
+            float[,] dtw = new float[m, n];
+
+            for (int ii = 0; ii < m; ii++)
+                for (int jj = 0; jj < n; jj++)
+                    dtw[ii, jj] = float.NegativeInfinity;
+            dtw[0, 0] = 0;
+            for (int ii = 1; ii < m; ii++)
+            {
+                for (int jj = Math.Max(1, ii - r); jj < Math.Min(m, ii + r); jj++)
+                {
+                    float cost = candidate[ii - 1].DotProduct(template[jj - 1]);
+                    float min = Math.Max(dtw[ii - 1, jj], Math.Max(dtw[ii, jj - 1], dtw[ii - 1, jj - 1]));
+                    dtw[ii, jj] = cost + min;
+                }
+            }
+
+            return dtw[candidate.Count, template.Count];
+        }
 
         private float StdDev(IEnumerable<float> values)
         {
@@ -284,10 +305,15 @@ namespace ActionVisualizer
     }
     
     class Gesture
-    {
+    {        
+        /*
         public static int resample_cnt = 20;
         public static int r = 4;//(resample_cnt / 10);
-
+        */
+        
+        public static int resample_cnt = 16;
+        public static int r = (resample_cnt / 10);
+        
         public string gname { get; set; }
         public List<Vector<float>> raw_pts;
         public List<Vector<float>> pts;

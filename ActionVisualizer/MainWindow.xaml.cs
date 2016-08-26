@@ -1,8 +1,6 @@
 ﻿using Exocortex.DSP;
-using GestureTests.Util;
 using NAudio.Dsp;
 using NAudio.Wave;
-using MathNet.Numerics;
 using System;
 using System.Collections.Generic;
 using System.IO;

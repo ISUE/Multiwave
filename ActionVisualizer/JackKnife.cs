@@ -36,7 +36,6 @@ namespace ActionVisualizer
                 {
                     Add(gs.StrokePoints, gs.Gesture.ToString());
                 }
-                break;
             }
             Normalize();   
         }
@@ -46,10 +45,8 @@ namespace ActionVisualizer
             List<UserDataSet> alldata = DataLoader.LoadGestureDataFrom(path);
             foreach (UserDataSet ud in alldata)
             {
-                int temp = 0;                
                 foreach (GestureSample gs in ud.TrainingSamples)
                 {
-                    temp++;
 
                     List<Vector<float>> data = new List<Vector<float>>();
                     foreach (var rd in gs.RawData)
@@ -57,11 +54,30 @@ namespace ActionVisualizer
 
                     Add(data, gs.Gesture.ToString());
                 }
-                break;
             }
             Normalize();
         }
-        
+        public void InitializeFromSingleUser(string path, string uname)
+        {
+            List<UserDataSet> alldata = DataLoader.LoadGestureDataFrom(path);
+            foreach (UserDataSet ud in alldata)
+            {
+                if (uname == "" || ud.Path.Contains(uname))
+                {
+                    foreach (GestureSample gs in ud.TrainingSamples)
+                    {
+
+                        List<Vector<float>> data = new List<Vector<float>>();
+                        foreach (var rd in gs.RawData)
+                            data.Add(Vector<float>.Build.DenseOfArray(rd));
+
+                        Add(data, gs.Gesture.ToString());
+                    }
+                }
+            }
+            Normalize();
+        }
+
         public float CrossValidateDataset()
         {
             float errors = 0;

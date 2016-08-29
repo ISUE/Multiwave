@@ -168,14 +168,13 @@ namespace ActionVisualizer
 
             Log = new GestureTests.Logger("ActionVisualizer");            
             JK = new JackKnife();
-            JK.InitializeRawFromFolder(GestureTests.Config.DataPath);
+            JK.InitializeFromSingleUser(GestureTests.Config.DataPath, userDirectory.Text);
             //JK.InitializeFromFolder(GestureTests.Config.DataPath);
         }
 
         void waveIn_DataAvailable(object sender, WaveInEventArgs e)
         {
-            //Console.WriteLine("WaveIn_DataAvailable");
-            //Console.WriteLine(e.BytesRecorded); //8288 bytes -> 2072 floats (24 too many)
+          
             if (init_inbetween)
             {
                 inbetween = new float[e.BytesRecorded / 4 - buffersize];
@@ -310,37 +309,11 @@ namespace ActionVisualizer
                     tot_X += now.x;
                     tot_Y += now.y;
                 }
-                //gestureDetected.Text += (Math.Round(tot_X,2) + " " + Math.Round(tot_Y,2));
+
                 pointHist.Add(new Point(tot_X, tot_Y));
                 if (pointHist.Count > maxHistoryLength)
                     pointHist.RemoveAt(0);
-                /*if (!gesture_started && tot_X == 0 && tot_Y == 0)
-                {
-                    idle_count++;
-
-                    pointHist.Clear();
-                    foreach (List<int> sublist in history)
-                        sublist.Clear();
-                    foreach (List<int> sublist in inverse_history)
-                        sublist.Clear();
-
-
-                    //TODO, Evaluate the proper length of the deadzone. (seems to be 6 frames)
-                    if (idle_count > frameWindow.SelectedIndex)
-                    {
-                        idle_count = 0;
-                        gestureDetected.Text = "none";
-                    }
-                }
-                if (gesture_started && tot_X == 0 && tot_Y == 0)
-                    motion_free++;
-                if (tot_X != 0 || tot_Y != 0)
-                {
-                    gesture_started = true;
-                    motion_free = 0;
-                    idle_count = 0;
-                }
-                */
+           
                 generateStroke(pointHist);
             }
             else if (selectedChannels >= 3)
@@ -353,39 +326,14 @@ namespace ActionVisualizer
                     tot_Y += now.y;
                     tot_Z += now.z;
                 }
-                //gestureDetected.Text += (Math.Round(tot_X, 2) + " " + Math.Round(tot_Y, 2) + " " + Math.Round(tot_Z, 2));
+
                 pointHist.Add(new Point(tot_X, tot_Y));
                 point3DHist.Add(new Point3D(tot_X, tot_Y, tot_Z));
                 if (pointHist.Count > maxHistoryLength)
                     pointHist.RemoveAt(0);
                 if (point3DHist.Count > maxHistoryLength)
                     point3DHist.RemoveAt(0);
-                /*if (!gesture_started && tot_X == 0 && tot_Y == 0 && tot_Z == 0)
-                {
-                    idle_count++;
-                    pointHist.Clear();
-                    point3DHist.Clear();
-                    foreach (List<int> sublist in history)
-                        sublist.Clear();
-                    foreach (List<int> sublist in inverse_history)
-                        sublist.Clear();
-
-                    //TODO, Evaluate the proper length of the deadzone. 
-                    if (idle_count > frameWindow.SelectedIndex)
-                    {
-                        idle_count = 0;
-                        gestureDetected.Text = "none";
-                    }
-                }
-                if (gesture_started && tot_X == 0 && tot_Y == 0 && tot_Z == 0)
-                    motion_free++;
-                if (tot_X != 0 || tot_Y != 0 || tot_Z != 0)
-                {
-                    gesture_started = true;
-                    motion_free = 0;
-                    idle_count = 0;
-                }*/
-
+               
                 generateStroke(pointHist);
             }
             
@@ -639,16 +587,7 @@ namespace ActionVisualizer
 
         public void gestureCompleted()
         {
-            int motion_threshold = 3; //originally 5         
-            int ignore_threshold = 10;
-
-            /* 
-            if( ignoreFrames <= ignore_threshold)                          
-            {
-                resetData();
-            }*/
-
-            //if (gesture_started && ignoreFrames > ignore_threshold && motion_free > motion_threshold && selectedChannels >= 2)
+        
             if (selectedChannels >= 2)
             {
                 /*
@@ -754,17 +693,12 @@ namespace ActionVisualizer
 
         public void writeTo2DFile()
         {
-            string DataPath = @"..\..\..\data\a001\";
+            string DataPath = GestureTests.Config.DataPath + userDirectory.Text + "\\";// @"..\..\..\data\a001\";
 
             string searchPattern = gestureSelector.Text + "???";
             DirectoryInfo di = Directory.CreateDirectory(DataPath);
             FileInfo[] files = di.GetFiles(searchPattern);
             int file_index = files.Length;
-
-            //CreateSaveBitmap(_ink, ImagePath + gestureSelector.Text + file_index + ".png");
-            //SaveStroke(S, StrokePath + gestureSelector.Text + file_index + ".isf");
-
-            //CreateSaveGroupStroke(_ink, ImagePath + gestureSelector.Text + file_index + "_group.png", StrokePath + gestureSelector.Text + file_index + "_group.isf");
 
             string filename = DataPath + gestureSelector.Text + file_index;
             StreamWriter file = File.CreateText(filename);
@@ -809,7 +743,7 @@ namespace ActionVisualizer
 
         public void writeTo3DFile()
         {
-            string DataPath = @"..\..\..\data6D\a001\";
+            string DataPath = GestureTests.Config.DataPath + userDirectory.Text + "\\"; //@"..\..\..\data6D\a001\";
             string searchPattern = gestureSelector.Text + "???";
             DirectoryInfo di = Directory.CreateDirectory(DataPath);
             FileInfo[] files = di.GetFiles(searchPattern);
@@ -871,6 +805,9 @@ namespace ActionVisualizer
 
         void MainWindow_KeyDown(object sender, KeyEventArgs e)
         {
+            if ((userDirectory as Control).IsFocused)
+                return;
+
             if (!readyforgesture && (e.Key == Key.A))
             {
                 resetData();
@@ -894,8 +831,11 @@ namespace ActionVisualizer
                 generateAllGestureStrokes();
             }
         }
+
         void MainWindow_KeyUp(object sender, KeyEventArgs e)
         {
+            if ((userDirectory as Control).IsFocused)
+                return;
             if (e.Key == Key.A)
             {
                 if (readyforgesture && pointHist.Count > 2)
@@ -1027,7 +967,11 @@ namespace ActionVisualizer
         }
 
         private void use3DGestures_Checked(object sender, RoutedEventArgs e)
-        {
+        { 
+            GestureTests.Config.DataPath = @"..\..\..\data6D\";
+            JK = new JackKnife();
+            JK.InitializeFromSingleUser(GestureTests.Config.DataPath, userDirectory.Text);
+            /*
             gestureSelector.Items.Clear();
             gestureSelector.Items.Add("swipe_left");
             gestureSelector.Items.Add("swipe_right");
@@ -1051,11 +995,16 @@ namespace ActionVisualizer
             gestureSelector.Items.Add("horizontal_L");
             gestureSelector.Items.Add("vertical_L");
             //gestureSelector.Items.Add("z");
-            gestureSelector.Items.Add("detect");            
+            gestureSelector.Items.Add("detect");    
+            */
         }
 
         private void use3DGestures_Unchecked(object sender, RoutedEventArgs e)
         {
+            GestureTests.Config.DataPath = @"..\..\..\data\";
+            JK = new JackKnife();
+            JK.InitializeFromSingleUser(GestureTests.Config.DataPath, userDirectory.Text);
+            /*
             gestureSelector.Items.Clear();
             gestureSelector.Items.Add("swipe_left");
             gestureSelector.Items.Add("swipe_right");
@@ -1074,6 +1023,7 @@ namespace ActionVisualizer
             //gestureSelector.Items.Add("two_handed_fb");
             //gestureSelector.Items.Add("two_handed_lr");
             gestureSelector.Items.Add("detect");
+            */
         }
         
     }

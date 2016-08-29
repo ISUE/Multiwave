@@ -80,10 +80,6 @@ namespace ActionVisualizer
         Point3DCollection point3DHist;
 
         bool readyforgesture = false;
-        bool gesture_started = false;
-        int motion_free = 0;
-        int idle_count = 0;
-        int ignoreFrames = 0;
 
         GestureTests.Logger Log;
 
@@ -272,7 +268,6 @@ namespace ActionVisualizer
 
         private void detectGestures()
         {
-            ignoreFrames++;
             if (selectedChannels == 1)
             {
                 foreach (List<int> subList in history)
@@ -607,7 +602,7 @@ namespace ActionVisualizer
                     
                     if (selectedChannels == 2)
                     {
-                        List<Tuple<Gesture, float>> results = new List<Tuple<Gesture, float>>();
+                        var results = new List<RecognitionResult>();
                         //List<Vector2> StylusPoints = new List<Vector2>();
                         List<Vector<float>> data = new List<Vector<float>>();
                         //foreach (StylusPoint P in S)
@@ -619,20 +614,21 @@ namespace ActionVisualizer
 
                         for (int ii = 5; ii < pointHist.Count; ii+=5) //30
                         {
-                            Tuple<Gesture, float> temp = JK.Classify(new Gesture(data.GetRange(data.Count - ii - 1, ii), "unknown"));
+                            var temp = JK.Classify(new Gesture(data.GetRange(data.Count - ii - 1, ii), "unknown"));
                             //Tuple<Gesture, float> temp = JK.Classify(new Gesture(StylusPoints.GetRange(StylusPoints.Count - ii - 1, ii), "unknown"));
                             results.Add(temp);
                         }
 
-                        Tuple<Gesture, float> best = results.OrderByDescending(item => item.Item2).Last();
+                        var best = results.OrderByDescending(item => item.score).Last();
 
 
-                        if (best.Item1 == null || best.Item2 > .60 * Gesture.resample_cnt || (prev2 != prev || prev != best.Item1.gname || prev2 != best.Item1.gname))
+                        if (best.template == null || best.score > .60 * Gesture.resample_cnt || (prev2 != prev || prev != best.template.gname || prev2 != best.template.gname))
                         {
+ 
                         }
                         else
                         {
-                            switch (best.Item1.gname)
+                            switch (best.template.gname)
                             {
                                 case "swipe_up":
                                     gestureDetected.Text = "swipe_forward";
@@ -647,17 +643,15 @@ namespace ActionVisualizer
                                     gestureDetected.Text = "tap_back";
                                     break;
                                 default:
-                                    gestureDetected.Text = best.Item1.gname;
+                                    gestureDetected.Text = best.template.gname;
                                     break;
                             }
-                            gestureDetected.Text += "\n" + best.Item2.ToString();
-
+                            gestureDetected.Text += "\n" + best.score.ToString();
+                      
                         }
-
                         prev2 = prev;
-                        prev = best.Item1.gname;
+                        prev = best.template == null ? "" : best.template.gname;
                         return;
-
                     }
                     if (selectedChannels == 3)
                     {               
@@ -687,8 +681,6 @@ namespace ActionVisualizer
             point3DHist.Clear();
             data_history.Clear();
 
-            //prepare for next gesture (might need a button press)
-            motion_free = 0;
         }
 
         public void writeTo2DFile()

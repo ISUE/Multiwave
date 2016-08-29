@@ -15,16 +15,33 @@ using System.Threading;
 
 namespace ActionVisualizer
 {
+
+    class RecognitionResult
+    {
+        public float tests;
+        public float pruned_by_best_score;
+        public float pruned_by_rejection;
+        public Gesture template;
+        public float score;
+
+        public RecognitionResult()
+        {
+            tests = 0.0f;
+            pruned_by_best_score = 0.0f;
+            pruned_by_rejection = 0.0f;
+            template = null;
+            score = float.PositiveInfinity;
+        }
+    }
+
+
     class JackKnife
     {
-        private List<Gesture> templates;
-        private float pruned, tested;
+        public List<Gesture> templates;
 
         public JackKnife()
         {
-            templates = new List<Gesture>();
-            pruned = 0.0f;
-            tested = 0.0f;
+            templates = new List<Gesture>();           
         }
 
         public void InitializeFromFolder(string path)
@@ -87,9 +104,14 @@ namespace ActionVisualizer
                 templates.RemoveAt(ii);
 
                 var result = Classify(candidate);
-                if (result.Item1.gname != candidate.gname)
+                if(result.template == null)
                 {
-                    Console.WriteLine(result.Item1.gname + " " + candidate.gname);
+                    Console.WriteLine("Nothing " + candidate.gname);
+                    errors++;
+                }
+                else if (result.template.gname != candidate.gname)
+                {
+                    Console.WriteLine(result.template.gname + " " + candidate.gname);
                     errors++;
                 }
                 templates.Insert(ii, candidate);
@@ -155,112 +177,108 @@ namespace ActionVisualizer
             {
                 float mean = t.rejection.Average();
                 float std = StdDev(t.rejection);
-                t.rejection_threshold = mean - 0.0f * std;
+                t.rejection_threshold = mean - 1.5f * std;
             }
         }
 
-        public Tuple<float, List<float>> UpperBound(Gesture candidate, Gesture template)
+        public float LowerBound(
+             Gesture candidate,
+             Gesture template)
         {
-            List<float> boundary = new List<float>();
+            int m = candidate.vecs[0].Count;
+            float ret = 0.0f;
+
             for (int ii = 0;
-                ii < candidate.vecs.Count() &&
-                ii < template.lower.Count() &&
-                ii < template.upper.Count();
-                ii++)
+                 ii < candidate.vecs.Count();
+                 ii++)
             {
-                Vector<float> v1 = candidate.vecs[ii];
-                Vector<float> lower = template.lower[ii];
-                Vector<float> upper = template.upper[ii];
+                float tmp = 0.0f;
 
-                var v2 = Vector<float>.Build.SameAs(v1);
-                for (int jj = 0; jj < v2.Count(); jj++)
+                for (int jj = 0;
+                     jj < m;
+                     jj++)
                 {
-                    if (v1[jj] > 0)
-                        v2[jj] = upper[jj];
+                    if (candidate.vecs[ii][jj] >= 0.0f)
+                        tmp += candidate.vecs[ii][jj] * template.upper[ii][jj];
                     else
-                        v2[jj] = lower[jj];
+                        tmp += candidate.vecs[ii][jj] * template.lower[ii][jj];
                 }
 
-                boundary.Add(1.0f - Math.Min(1.0f, v1.DotProduct(v2)));
+                tmp = Clamp(tmp, -1.0f, 1.0f);
+                ret += 1.0f - tmp;
             }
-            return new Tuple<float, List<float>>(boundary.Sum(), boundary);
+
+            return ret;
         }
 
-        public Tuple<Gesture, float> Classify(Gesture candidate)
+        static public float SCORE = 0.0f;
+
+        public RecognitionResult Classify(Gesture candidate)
         {
-            Gesture best = new Gesture(candidate.raw_pts, "");
-
+            int feature_cnt = candidate.features.Count();
+            //
+            // calculate lower bounds for each template based on envelop
+            // and sort the list based on the boundaries  
+            //
             var temp_templates = templates;
-
             foreach (var t in temp_templates)
             {
-                var out_tuple = UpperBound(candidate, t);
-                t.bound = out_tuple.Item1;
-                t.boundary = out_tuple.Item2;
+                float score = 1.0f;
+                for (int ii = 0;
+                    ii < feature_cnt;
+                    ii++)
+                {
+                    Vector<float> fvec = candidate.features[ii];
+                    score *= 1.0f / fvec.DotProduct(t.features[ii]);
+                }
+                t.fscore = score;
+                t.lower_bound = LowerBound(candidate, t);
+                //Debug.Log(t.gname + ":" + t.lower_bound.ToString() + ", " + t.rejection_threshold.ToString() ); 
             }
 
-            temp_templates = temp_templates.OrderBy(x => x.bound).ToList();
+            //Debug.Log("\n");
 
+            temp_templates = temp_templates.OrderBy(x => x.lower_bound).ToList();
 
-            float best_score = float.PositiveInfinity;
+            //
+            // now fully evaluate each template
+            //
+            RecognitionResult ret = new RecognitionResult();
             foreach (Gesture template in temp_templates)
             {
-                tested += 1.0f;
-                if (template.bound > best_score || template.bound > template.rejection_threshold)
+                ret.tests += 1.0f;
+
+                float fscore = template.fscore * template.lower_bound;
+                //if (template.lower_bound > template.rejection_threshold)
+                if (fscore > template.rejection_threshold)
                 {
-                    pruned += 1.0f;
+                    ret.pruned_by_rejection += 1.0f;
                     continue;
                 }
 
-                float score = DTW_Distance(candidate.vecs, template.vecs, Gesture.r);
+                if (fscore > ret.score)
+                {
+                    ret.pruned_by_best_score += 1.0f;
+                    continue;
+                }
+
+                float score = DTW_Distance(
+                    candidate.vecs,
+                    template.vecs,
+                    Gesture.r);
 
                 if (score >= template.rejection_threshold)
                     continue;
 
-                if (score < best_score)
+                score *= template.fscore;
+                if (score < ret.score)
                 {
-                    best = template;
-                    best_score = score;
+                    ret.template = template;
+                    ret.score = score;
                 }
             }
-            return new Tuple<Gesture, float>(best, best_score);
-        }
 
-        public List<Tuple<Gesture, float>> Classify(Gesture candidate, int k)
-        {
-
-            var outList = new List<Tuple<Gesture, float>>();
-            var temp_templates = templates;
-
-            foreach (var t in temp_templates)
-            {
-                var out_tuple = UpperBound(candidate, t);
-                t.bound = out_tuple.Item1;
-                t.boundary = out_tuple.Item2;
-            }
-
-            temp_templates = temp_templates.OrderBy(x => x.bound).ToList();
-
-
-            float best_score = float.PositiveInfinity;
-            foreach (Gesture template in temp_templates)
-            {
-                tested += 1.0f;
-                if (template.bound > best_score || template.bound > template.rejection_threshold)
-                {
-                    pruned += 1.0f;
-                    continue;
-                }
-
-                float score = DTW_Distance(candidate.vecs, template.vecs, Gesture.r);
-
-                if (score >= template.rejection_threshold)
-                    continue;
-
-                outList.Add(new Tuple<Gesture, float>(template, score));
-            }
-            outList.Sort((x, y) => x.Item2.CompareTo(y.Item2));
-            return outList.GetRange(0, Math.Min(k,outList.Count()));
+            return ret;
         }
 
 
@@ -322,18 +340,24 @@ namespace ActionVisualizer
             }
             return ret;
         }
+
+        public static float Clamp(float value, float min, float max)
+        {
+            return (value < min) ? min : (value > max) ? max : value;
+        }
     }
     
     class Gesture
     {        
-        /*
-        public static int resample_cnt = 20;
-        public static int r = 4;//(resample_cnt / 10);
-        */
         
         public static int resample_cnt = 16;
-        public static int r = (resample_cnt / 10);
+        public static int r = 2;//(resample_cnt / 10);
         
+        /*
+        public static int resample_cnt = 16;
+        public static int r = (resample_cnt / 10);
+        */
+
         public string gname { get; set; }
         public List<Vector<float>> raw_pts;
         public List<Vector<float>> pts;
@@ -342,8 +366,10 @@ namespace ActionVisualizer
 
         public List<float> rejection;
         public float rejection_threshold;
-        public float bound;
-        internal List<float> boundary;
+
+        internal List<Vector<float>> features;
+        internal float lower_bound;
+        internal float fscore;
 
         public Gesture(List<Vector2> points, string label)
         {
@@ -361,6 +387,9 @@ namespace ActionVisualizer
             {
                 vecs.Add(pts[ii].Subtract(pts[ii - 1]).Normalize(2));
             }
+
+            features = Extract_Features(temp);
+
             Tuple<List<Vector<float>>, List<Vector<float>>> out_tuple = Envelop(vecs, r);
             lower = out_tuple.Item1;
             upper = out_tuple.Item2;
@@ -384,6 +413,10 @@ namespace ActionVisualizer
             {
                 vecs.Add(pts[ii].Subtract(pts[ii - 1]).Normalize(2));
             }
+
+            features = Extract_Features(temp);
+
+
             Tuple<List<Vector<float>>, List<Vector<float>>> out_tuple = Envelop(vecs, r);
             lower = out_tuple.Item1;
             upper = out_tuple.Item2;
@@ -401,6 +434,9 @@ namespace ActionVisualizer
             {
                 vecs.Add(pts[ii].Subtract(pts[ii - 1]).Normalize(2));
             }
+
+            features = Extract_Features(temp);
+
             Tuple<List<Vector<float>>, List<Vector<float>>> out_tuple = Envelop(vecs, r);
             lower = out_tuple.Item1;
             upper = out_tuple.Item2;
@@ -496,7 +532,55 @@ namespace ActionVisualizer
 
         public int CompareTo(Gesture other)
         {
-            return bound.CompareTo(other.bound);
+            return lower_bound.CompareTo(other.lower_bound);
+        }
+
+        static List<Vector<float>> Extract_Features(List<Vector<float>> points)
+        {
+            if (points.Count == 0)
+                return null;
+
+            var m = points[0].Count;
+            var abs_dist = Vector<float>.Build.Dense(m, 0);
+            var minimum = points[0].Clone();
+            var maximum = points[0].Clone();
+            var emin = Vector<float>.Build.Dense(3, float.PositiveInfinity);
+            var emax = Vector<float>.Build.Dense(3, float.NegativeInfinity);
+            var ratios = Vector<float>.Build.Dense(3, float.NegativeInfinity);
+
+            for (int ii = 1;
+                 ii < points.Count;
+                 ii++)
+            {
+                var vec = points[ii] - points[ii - 1];
+                Vector<float> point = points[ii];
+
+                for (int jj = 0;
+                     jj < m;
+                     jj++)
+                {
+                    int kk = jj % 3;
+                    abs_dist[jj] += Math.Abs(vec[jj]);
+                    minimum[jj] = Math.Min(minimum[jj], point[jj]);
+                    maximum[jj] = Math.Max(maximum[jj], point[jj]);
+                    emin[kk] = Math.Min(emin[kk], Math.Abs(vec[jj]));
+                    emax[kk] = Math.Max(emax[kk], Math.Abs(vec[jj]));
+                }
+            }
+
+            var deltas = maximum - minimum;
+            var edeltas = emax - emin;
+
+            ratios[0] = edeltas[0] / edeltas[1];
+            ratios[1] = edeltas[0] / edeltas[2];
+            ratios[2] = edeltas[1] / edeltas[2];
+
+            return new List<Vector<float>> {
+                abs_dist /  (float) abs_dist.L2Norm(),
+                //deltas / (float) deltas.L2Norm(),
+                edeltas / (float) edeltas.L2Norm(),
+                //ratios / (float) ratios.L2Norm(),
+            };
         }
     }
 }

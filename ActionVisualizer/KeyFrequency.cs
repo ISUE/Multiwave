@@ -50,11 +50,11 @@ namespace ActionVisualizer
             this.channel = c;
             this.radius = rad;
             this.data = new float[radius * 2 + 1];
-            
+
             //rescale numbers >=0
 
-            double min = Double.PositiveInfinity;
-            double max = Double.NegativeInfinity;
+            float min = float.MaxValue;
+            float max = float.MinValue;
             for (int i = 0; i < this.data.Length; i++)
             {
                 this.data[i] = mag2db(indata[center-rad+i]);
@@ -63,7 +63,7 @@ namespace ActionVisualizer
             }
             for (int i = 0; i < this.data.Length; i++)
             {
-                this.data[i] -= (float) min;
+                this.data[i] -= min;
                 if (this.data[i] > max)
                     max = this.data[i];
             }
@@ -72,7 +72,7 @@ namespace ActionVisualizer
 
             for (int i = 0; i < this.data.Length; i++)
             {
-                this.data[i] /= (float)max;
+                this.data[i] /= max;
                 if (float.IsNaN(data[i]))
                     Console.WriteLine("NaN");
             }
@@ -92,8 +92,8 @@ namespace ActionVisualizer
 
             //rescale numbers >=0
 
-            double min = Double.PositiveInfinity;
-            double max = Double.NegativeInfinity;
+            float min = float.MaxValue;
+            float max = float.MinValue;
             for (int i = 0; i < this.data.Length; i++)
             {
                 this.data[i] = (float)indata[center - rad + i];
@@ -103,7 +103,7 @@ namespace ActionVisualizer
 
             for (int i = 0; i < this.data.Length; i++)
             {
-                this.data[i] -= (float) min;
+                this.data[i] -= min;
                 if (this.data[i] > max)
                     max = this.data[i];
             }
@@ -111,7 +111,7 @@ namespace ActionVisualizer
             max = Math.Max(max, float.Epsilon);
             for (int i = 0; i < this.data.Length; i++)
             {
-                this.data[i] /= (float)max;
+                this.data[i] /= max;
                 if (float.IsNaN(data[i]))
                     Console.WriteLine("NaN");
             }

@@ -67,8 +67,15 @@ namespace ActionVisualizer
                 if (this.data[i] > max)
                     max = this.data[i];
             }
+
+            max = Math.Max(max, float.Epsilon);
+
             for (int i = 0; i < this.data.Length; i++)
-                this.data[i] /= (float) max;
+            {
+                this.data[i] /= (float)max;
+                if (float.IsNaN(data[i]))
+                    Console.WriteLine("NaN");
+            }
 
             isBoth = false;
             inverse_state = 0;
@@ -92,15 +99,22 @@ namespace ActionVisualizer
                 this.data[i] = (float)indata[center - rad + i];
                 if (this.data[i] < min)
                     min = this.data[i];
-            }
+            }            
+
             for (int i = 0; i < this.data.Length; i++)
             {
                 this.data[i] -= (float) min;
                 if (this.data[i] > max)
                     max = this.data[i];
             }
+
+            max = Math.Max(max, float.Epsilon);
             for (int i = 0; i < this.data.Length; i++)
-                this.data[i] /= (float) max;
+            {
+                this.data[i] /= (float)max;
+                if (float.IsNaN(data[i]))
+                    Console.WriteLine("NaN");
+            }
 
             isBoth = false;
             inverse_state = 0;

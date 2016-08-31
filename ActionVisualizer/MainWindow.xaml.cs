@@ -600,8 +600,9 @@ namespace ActionVisualizer
                     //Attempt to Classify
                     //TODO Segmentation of data into different windows. find one with highest reliability.
                     
-                    if (selectedChannels == 2)
+                    if (selectedChannels >= 2)
                     {
+                        float thresh = selectedChannels > 2 ? .90f : .65f;
                         var results = new List<RecognitionResult>();
                         //List<Vector2> StylusPoints = new List<Vector2>();
                         List<Vector<float>> data = new List<Vector<float>>();
@@ -621,46 +622,22 @@ namespace ActionVisualizer
 
                         var best = results.OrderByDescending(item => item.score).Last();
 
+                        //Console.WriteLine(best.pruned_by_best_score + " " + best.pruned_by_rejection + " " + best.tests);
+                        Console.WriteLine((best.template != null ? best.template.gname : "Nothing") + " " + best.score);
 
-                        if (best.template == null || best.score > .60 * Gesture.resample_cnt || (prev2 != prev || prev != best.template.gname || prev2 != best.template.gname))
+
+                        if (best.template == null || best.score > thresh * Gesture.resample_cnt || (prev2 != prev || prev != best.template.gname || prev2 != best.template.gname))
                         {
- 
                         }
                         else
                         {
-                            switch (best.template.gname)
-                            {
-                                case "swipe_up":
-                                    gestureDetected.Text = "swipe_forward";
-                                    break;
-                                case "swipe_down":
-                                    gestureDetected.Text = "swipe_back";
-                                    break;
-                                case "tap_up":
-                                    gestureDetected.Text = "tap_forward";
-                                    break;
-                                case "tap_down":
-                                    gestureDetected.Text = "tap_back";
-                                    break;
-                                default:
-                                    gestureDetected.Text = best.template.gname;
-                                    break;
-                            }
-                            gestureDetected.Text += "\n" + best.score.ToString();
-                      
+                             gestureDetected.Text = best.template.gname;
+                             gestureDetected.Text += "\n" + best.score.ToString();                      
                         }
                         prev2 = prev;
                         prev = best.template == null ? "" : best.template.gname;
                         return;
-                    }
-                    if (selectedChannels == 3)
-                    {               
-                        gestureDetected.Text = "";
-                    }
-                    if (selectedChannels == 5)
-                    {
-                        gestureDetected.Text = "";
-                    }
+                    }                  
 
                     if (gestureDetected.Text == gestureSelector.Text)
                         Log.Log(gestureDetected.Text, gestureSelector.Text, history);
@@ -961,6 +938,7 @@ namespace ActionVisualizer
         private void use3DGestures_Checked(object sender, RoutedEventArgs e)
         { 
             GestureTests.Config.DataPath = @"..\..\..\data6D\";
+            GestureTests.Config.Use3DMode = true;
             JK = new JackKnife();
             JK.InitializeFromSingleUser(GestureTests.Config.DataPath, userDirectory.Text);
             /*
@@ -994,6 +972,7 @@ namespace ActionVisualizer
         private void use3DGestures_Unchecked(object sender, RoutedEventArgs e)
         {
             GestureTests.Config.DataPath = @"..\..\..\data\";
+            GestureTests.Config.Use3DMode = false;
             JK = new JackKnife();
             JK.InitializeFromSingleUser(GestureTests.Config.DataPath, userDirectory.Text);
             /*

@@ -231,8 +231,8 @@ namespace ActionVisualizer
                     velocity[i] = KF.ElementAt(i).state;
                     displacement[i] += velocity[i];
 
-                    bars[i] = createBar(channelLabel[i], selectedChannels, velocity[i], frequencyStep/30+3);
-                    _barcanvas.Children.Add(bars[i]);
+                    //bars[i] = createBar(channelLabel[i], selectedChannels, velocity[i], frequencyStep/30+3);
+                    //_barcanvas.Children.Add(bars[i]);
 
                     if ((displacement[i] - prev_displacement[i]) < 0 && velocity[i] > 0)
                     {
@@ -309,7 +309,7 @@ namespace ActionVisualizer
                 if (pointHist.Count > maxHistoryLength)
                     pointHist.RemoveAt(0);
            
-                generateStroke(pointHist);
+                //generateStroke(pointHist);
             }
             else if (selectedChannels >= 3)
             {
@@ -329,7 +329,7 @@ namespace ActionVisualizer
                 if (point3DHist.Count > maxHistoryLength)
                     point3DHist.RemoveAt(0);
                
-                generateStroke(pointHist);
+                //generateStroke(pointHist);
             }
             
             
@@ -407,7 +407,7 @@ namespace ActionVisualizer
                     else
                     {
                         //Original Sine Wave generation
-                        inputs.Add(new SineWaveProvider32(minFrequency + c * frequencyStep, 0.5f, 44100, 1));
+                        inputs.Add(new SineWaveProvider32(minFrequency + c * frequencyStep, 1.0f, 44100, 1));
                         frequencies.Add(minFrequency + c * frequencyStep);
                         centerbins.Add((int)Math.Round((minFrequency + c * frequencyStep) / 10.768));
                     }
@@ -602,7 +602,7 @@ namespace ActionVisualizer
                     
                     if (selectedChannels >= 2)
                     {
-                        float thresh = selectedChannels > 2 ? .90f : .65f;
+                        float thresh = selectedChannels > 2 ? .875f : .675f;
                         var results = new List<RecognitionResult>();
                         //List<Vector2> StylusPoints = new List<Vector2>();
                         List<Vector<float>> data = new List<Vector<float>>();
@@ -623,7 +623,7 @@ namespace ActionVisualizer
                         var best = results.OrderByDescending(item => item.score).Last();
 
                         //Console.WriteLine(best.pruned_by_best_score + " " + best.pruned_by_rejection + " " + best.tests);
-                        Console.WriteLine((best.template != null ? best.template.gname : "Nothing") + " " + best.score);
+                        //Console.WriteLine((best.template != null ? best.template.gname : "Nothing") + " " + best.score);
 
 
                         if (best.template == null || best.score > thresh * Gesture.resample_cnt || (prev2 != prev || prev != best.template.gname || prev2 != best.template.gname))

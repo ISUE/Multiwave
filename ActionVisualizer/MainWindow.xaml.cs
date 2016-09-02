@@ -309,7 +309,7 @@ namespace ActionVisualizer
                 if (pointHist.Count > maxHistoryLength)
                     pointHist.RemoveAt(0);
            
-                //generateStroke(pointHist);
+                generateStroke(pointHist);
             }
             else if (selectedChannels >= 3)
             {
@@ -329,7 +329,7 @@ namespace ActionVisualizer
                 if (point3DHist.Count > maxHistoryLength)
                     point3DHist.RemoveAt(0);
                
-                //generateStroke(pointHist);
+                generateStroke(pointHist);
             }
             
             
@@ -670,6 +670,7 @@ namespace ActionVisualizer
             int file_index = files.Length;
 
             string filename = DataPath + gestureSelector.Text + file_index;
+            gestureDetected.Text = gestureSelector.Text + file_index;
             StreamWriter file = File.CreateText(filename);
 
             file.WriteLine("GestureName: " + gestureSelector.Text);

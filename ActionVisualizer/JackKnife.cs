@@ -211,7 +211,6 @@ namespace ActionVisualizer
             return ret;
         }
 
-        static public float SCORE = 0.0f;
 
         public RecognitionResult Classify(Gesture candidate)
         {
@@ -542,11 +541,9 @@ namespace ActionVisualizer
 
             var m = points[0].Count;
             var abs_dist = Vector<float>.Build.Dense(m, 0);
-            var minimum = points[0].Clone();
-            var maximum = points[0].Clone();
-            var emin = Vector<float>.Build.Dense(3, float.PositiveInfinity);
-            var emax = Vector<float>.Build.Dense(3, float.NegativeInfinity);
-            var ratios = Vector<float>.Build.Dense(3, float.NegativeInfinity);
+
+            //var emin = Vector<float>.Build.Dense(33, float.PositiveInfinity);
+            //var emax = Vector<float>.Build.Dense(33, float.NegativeInfinity);
 
             for (int ii = 1;
                  ii < points.Count;
@@ -559,27 +556,18 @@ namespace ActionVisualizer
                      jj < m;
                      jj++)
                 {
-                    int kk = jj % 3;
-                    abs_dist[jj] += Math.Abs(vec[jj]);
-                    minimum[jj] = Math.Min(minimum[jj], point[jj]);
-                    maximum[jj] = Math.Max(maximum[jj], point[jj]);
-                    emin[kk] = Math.Min(emin[kk], Math.Abs(vec[jj]));
-                    emax[kk] = Math.Max(emax[kk], Math.Abs(vec[jj]));
+                    //int kk = jj % 33;
+                    abs_dist[jj] += Math.Abs(vec[jj]);             
+                    //emin[kk] = Math.Min(emin[kk], Math.Abs(vec[jj]));
+                    //emax[kk] = Math.Max(emax[kk], Math.Abs(vec[jj]));
                 }
             }
 
-            var deltas = maximum - minimum;
-            var edeltas = emax - emin;
-
-            ratios[0] = edeltas[0] / edeltas[1];
-            ratios[1] = edeltas[0] / edeltas[2];
-            ratios[2] = edeltas[1] / edeltas[2];
+            //var edeltas = emax - emin;
 
             return new List<Vector<float>> {
                 abs_dist /  (float) abs_dist.L2Norm(),
-                //deltas / (float) deltas.L2Norm(),
-                edeltas / (float) edeltas.L2Norm(),
-                //ratios / (float) ratios.L2Norm(),
+                //edeltas / (float) edeltas.L2Norm(),
             };
         }
     }

@@ -602,7 +602,7 @@ namespace ActionVisualizer
                     
                     if (selectedChannels >= 2)
                     {
-                        float thresh = selectedChannels > 2 ? .875f : .675f;
+                        float thresh = selectedChannels > 2 ? .775f : .625f;
                         var results = new List<RecognitionResult>();
                         //List<Vector2> StylusPoints = new List<Vector2>();
                         List<Vector<float>> data = new List<Vector<float>>();

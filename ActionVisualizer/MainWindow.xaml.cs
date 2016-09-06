@@ -941,33 +941,7 @@ namespace ActionVisualizer
             GestureTests.Config.DataPath = @"..\..\..\data6D\";
             GestureTests.Config.Use3DMode = true;
             JK = new JackKnife();
-            JK.InitializeFromSingleUser(GestureTests.Config.DataPath, userDirectory.Text);
-            /*
-            gestureSelector.Items.Clear();
-            gestureSelector.Items.Add("swipe_left");
-            gestureSelector.Items.Add("swipe_right");
-            gestureSelector.Items.Add("swipe_up");
-            gestureSelector.Items.Add("swipe_down");
-            gestureSelector.Items.Add("swipe_front");
-            gestureSelector.Items.Add("swipe_back");
-            gestureSelector.Items.Add("tap_left");
-            gestureSelector.Items.Add("tap_right");
-            gestureSelector.Items.Add("tap_up");
-            gestureSelector.Items.Add("tap_down");
-            gestureSelector.Items.Add("tap_front");
-            gestureSelector.Items.Add("tap_back");
-            gestureSelector.Items.Add("scratchout");
-            gestureSelector.Items.Add("horizontal_square");
-            gestureSelector.Items.Add("vertical_square");
-            gestureSelector.Items.Add("horizontal_circle");
-            gestureSelector.Items.Add("vertical_circle");         
-            gestureSelector.Items.Add("horizontal_x");
-            gestureSelector.Items.Add("vertical_x");
-            gestureSelector.Items.Add("horizontal_L");
-            gestureSelector.Items.Add("vertical_L");
-            //gestureSelector.Items.Add("z");
-            gestureSelector.Items.Add("detect");    
-            */
+            JK.InitializeFromSingleUser(GestureTests.Config.DataPath, userDirectory.Text);            
         }
 
         private void use3DGestures_Unchecked(object sender, RoutedEventArgs e)
@@ -975,27 +949,7 @@ namespace ActionVisualizer
             GestureTests.Config.DataPath = @"..\..\..\data\";
             GestureTests.Config.Use3DMode = false;
             JK = new JackKnife();
-            JK.InitializeFromSingleUser(GestureTests.Config.DataPath, userDirectory.Text);
-            /*
-            gestureSelector.Items.Clear();
-            gestureSelector.Items.Add("swipe_left");
-            gestureSelector.Items.Add("swipe_right");
-            gestureSelector.Items.Add("swipe_up");
-            gestureSelector.Items.Add("swipe_down");
-            gestureSelector.Items.Add("tap_left");
-            gestureSelector.Items.Add("tap_right");
-            gestureSelector.Items.Add("tap_up");
-            gestureSelector.Items.Add("tap_down");
-            gestureSelector.Items.Add("scratchout");
-            gestureSelector.Items.Add("circle");
-            gestureSelector.Items.Add("square");
-            gestureSelector.Items.Add("x");
-            gestureSelector.Items.Add("L");
-            //gestureSelector.Items.Add("c");
-            //gestureSelector.Items.Add("two_handed_fb");
-            //gestureSelector.Items.Add("two_handed_lr");
-            gestureSelector.Items.Add("detect");
-            */
+            JK.InitializeFromSingleUser(GestureTests.Config.DataPath, userDirectory.Text);           
         }
         
     }

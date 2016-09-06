@@ -422,29 +422,9 @@ namespace GestureTests.Data
         {
             switch (gestureName)
             {
-                case "swipe_left": return GestureType.swipe_left;
-                case "swipe_right": return GestureType.swipe_right;
-                case "swipe_up": return GestureType.swipe_up;
-                case "swipe_down": return GestureType.swipe_down;
-                case "swipe_front": return GestureType.swipe_front;
-                case "swipe_back": return GestureType.swipe_back;
-                case "tap_left": return GestureType.tap_left;
-                case "tap_right": return GestureType.tap_right;
-                case "tap_up": return GestureType.tap_up;
-                case "tap_down": return GestureType.tap_down;
-                case "tap_front": return GestureType.tap_front;
-                case "tap_back": return GestureType.tap_back;
-                case "scratchout": return GestureType.scratchout;
-                case "square": return GestureType.square;
                 case "x": return GestureType.x;
                 case "c": return GestureType.c;
-                case "circle": return GestureType.circle;
-                case "two_handed_fb": return GestureType.two_handed_fb;
-                case "two_handed_lr": return GestureType.two_handed_lr;
-                case "horizontal_circle": return GestureType.horizontal_circle;
-                case "vertical_circle": return GestureType.vertical_circle;
-                case "spiral": return GestureType.spiral;
-                case "arm_lift": return GestureType.arm_lift;                
+                case "circle": return GestureType.circle;          
                 case "triangle": return GestureType.triangle;
                 case "z": return GestureType.z;                                
                 case "side_x": return GestureType.side_x;
@@ -455,7 +435,15 @@ namespace GestureTests.Data
                 case "arrow": return GestureType.arrow;
                 case "left_bracket": return GestureType.left_bracket;
                 case "right_bracket": return GestureType.right_bracket;
-                case "star": return GestureType.star;                
+                case "star": return GestureType.star;
+                case "w": return GestureType.w;
+                case "double_arch": return GestureType.double_arch;
+                case "mu": return GestureType.mu;
+                case "y": return GestureType.y;
+                case "s": return GestureType.s;
+                case "p": return GestureType.p;
+                case "q": return GestureType.q;         
+
             }
 
             return GestureType.unknown;

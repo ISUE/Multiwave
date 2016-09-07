@@ -93,9 +93,17 @@ namespace ActionVisualizer
                     }
                 }
             }
+
             all_templates = templates;
+            //select first and last of each gname           
+            templates = all_templates.GroupBy(x => x.gname).Select(x => x.First()).Union(all_templates.GroupBy(x => x.gname).Select(x => x.Last())).ToList();
+
+            //select first of each gname
             //templates = all_templates.GroupBy(x => x.gname).Select(x => x.First()).ToList();
-            
+
+            //select random of each gname
+            //templates = all_templates.GroupBy(x => x.gname).OrderBy(x => Guid.NewGuid()).FirstOrDefault().ToList();
+
             Normalize();
         }
 

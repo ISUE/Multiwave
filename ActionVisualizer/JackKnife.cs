@@ -94,7 +94,7 @@ namespace ActionVisualizer
                 }
             }
             all_templates = templates;
-            templates = all_templates.GroupBy(x => x.gname).Select(x => x.First()).ToList();
+            //templates = all_templates.GroupBy(x => x.gname).Select(x => x.First()).ToList();
             
             Normalize();
         }

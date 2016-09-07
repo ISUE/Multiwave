@@ -117,7 +117,98 @@ namespace ActionVisualizer
                 templates.Insert(ii, candidate);
             }
             return errors / (templates.Count);
-        }   
+        }
+
+        public float CompareDatasets()
+        {
+            float errors = 0, errors_2D = 0, errors_3D = 0;
+            List<Gesture> original = templates;
+            List<Gesture> only2D = original.FindAll(x => x.Is2D() == true);
+            List<Gesture> only3D = original.FindAll(x => x.Is2D() == false);
+
+            Console.WriteLine();
+            Console.WriteLine("Comparing 2D");
+
+            templates = only2D;
+            for (int ii = 0; ii < templates.Count; ii++)
+            {
+                Gesture candidate = templates[ii];
+                templates.RemoveAt(ii);
+
+                var result = Classify(candidate);
+                if (result.template == null)
+                {
+                    Console.WriteLine("Nothing " + candidate.gname);
+                    errors_2D++;
+                }
+                else if (result.template.gname != candidate.gname)
+                {
+                    Console.WriteLine(result.template.gname + " " + candidate.gname);
+                    errors_2D++;
+                }
+                templates.Insert(ii, candidate);
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("Comparing 3D");
+
+            templates = only3D;
+            for (int ii = 0; ii < templates.Count; ii++)
+            {
+                Gesture candidate = templates[ii];
+                templates.RemoveAt(ii);
+
+                var result = Classify(candidate);
+                if (result.template == null)
+                {
+                    Console.WriteLine("Nothing " + candidate.gname);
+                    errors_3D++;
+                }
+                else if (result.template.gname != candidate.gname)
+                {
+                    Console.WriteLine(result.template.gname + " " + candidate.gname);
+                    errors_3D++;
+                }
+                templates.Insert(ii, candidate);
+            }
+
+            templates = original;
+
+            Console.WriteLine();
+            Console.WriteLine("Comparing All");
+
+            for (int ii = 0; ii < templates.Count; ii++)
+            {
+                Gesture candidate = templates[ii];
+                templates.RemoveAt(ii);
+
+                var result = Classify(candidate);
+                if (result.template == null)
+                {
+                    Console.WriteLine("Nothing " + candidate.gname);
+                    errors++;
+                }
+                else if (result.template.gname != candidate.gname)
+                {
+                    Console.WriteLine(result.template.gname + " " + candidate.gname);
+                    errors++;
+                }
+                templates.Insert(ii, candidate);
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("Error Rates:");
+
+            errors = errors / templates.Count;
+            errors_2D = errors_2D / only2D.Count;
+            errors_3D = errors_3D / only3D.Count;
+
+            Console.WriteLine("2D: \t" + errors_2D);
+            Console.WriteLine("3D: \t" + errors_3D);
+            Console.WriteLine("All:\t" + errors);
+
+            return errors / (templates.Count);
+        }
 
         public void Add(Gesture alpha)
         {
@@ -569,6 +660,15 @@ namespace ActionVisualizer
                 abs_dist /  (float) abs_dist.L2Norm(),
                 //edeltas / (float) edeltas.L2Norm(),
             };
+        }
+
+        public bool Is2D()
+        {
+            if (gname == "x" || gname == "c" || gname == "circle" || gname == "triangle"
+                || gname == "rectangle" || gname == "check" || gname == "caret" || gname == "zigzag"
+                || gname == "arrow" || gname == "star")
+                return true;
+            return false;
         }
     }
 }

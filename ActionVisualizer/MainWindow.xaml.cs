@@ -793,7 +793,8 @@ namespace ActionVisualizer
 
             if (e.Key == Key.E)
             {
-                Console.WriteLine("Error Rate of Dataset: " + JK.CrossValidateDataset());
+                JK.CompareDatasets();
+                //Console.WriteLine("Error Rate of Dataset: " + JK.CrossValidateDataset());
             }
 
             if (e.Key == Key.M)

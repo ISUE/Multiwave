@@ -121,14 +121,22 @@ namespace GestureTests
                 GesturesToUse.Add(GestureType.side_x);
                 GesturesToUse.Add(GestureType.rectangle);
                 GesturesToUse.Add(GestureType.circle);
+                GesturesToUse.Add(GestureType.c);
                 GesturesToUse.Add(GestureType.check);
                 GesturesToUse.Add(GestureType.caret);
                 GesturesToUse.Add(GestureType.zigzag);
                 GesturesToUse.Add(GestureType.arrow);
-                GesturesToUse.Add(GestureType.x);
                 GesturesToUse.Add(GestureType.left_bracket);
-                GesturesToUse.Add(GestureType.right_bracket);   
+                GesturesToUse.Add(GestureType.right_bracket);
                 GesturesToUse.Add(GestureType.star);
+                GesturesToUse.Add(GestureType.z);
+                GesturesToUse.Add(GestureType.w);
+                GesturesToUse.Add(GestureType.double_arch);
+                GesturesToUse.Add(GestureType.mu);
+                GesturesToUse.Add(GestureType.s);
+                GesturesToUse.Add(GestureType.p);
+                GesturesToUse.Add(GestureType.q);
+                GesturesToUse.Add(GestureType.y);
                 GesturesToUse.Add(GestureType.unknown);
             }
             else
@@ -138,14 +146,22 @@ namespace GestureTests
                 GesturesToUse.Add(GestureType.side_x);
                 GesturesToUse.Add(GestureType.rectangle);
                 GesturesToUse.Add(GestureType.circle);
+                GesturesToUse.Add(GestureType.c);
                 GesturesToUse.Add(GestureType.check);
                 GesturesToUse.Add(GestureType.caret);
                 GesturesToUse.Add(GestureType.zigzag);
                 GesturesToUse.Add(GestureType.arrow);
-                GesturesToUse.Add(GestureType.x);
                 GesturesToUse.Add(GestureType.left_bracket);
                 GesturesToUse.Add(GestureType.right_bracket);
                 GesturesToUse.Add(GestureType.star);
+                GesturesToUse.Add(GestureType.z);
+                GesturesToUse.Add(GestureType.w);
+                GesturesToUse.Add(GestureType.double_arch);
+                GesturesToUse.Add(GestureType.mu);
+                GesturesToUse.Add(GestureType.s);
+                GesturesToUse.Add(GestureType.p);
+                GesturesToUse.Add(GestureType.q);
+                GesturesToUse.Add(GestureType.y);
                 GesturesToUse.Add(GestureType.unknown);
             }
      

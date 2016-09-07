@@ -38,6 +38,7 @@ namespace ActionVisualizer
     class JackKnife
     {
         public List<Gesture> templates;
+        public List<Gesture> all_templates;
 
         public JackKnife()
         {
@@ -92,6 +93,9 @@ namespace ActionVisualizer
                     }
                 }
             }
+            all_templates = templates;
+            templates = all_templates.GroupBy(x => x.gname).Select(x => x.First()).ToList();
+            
             Normalize();
         }
 

@@ -57,12 +57,12 @@
             <ComboBoxItem Content="circle"/>
             <ComboBoxItem Content="triangle"/>
             <ComboBoxItem Content="rectangle"/>
-            <ComboBoxItem Content="z"/>
             <ComboBoxItem Content="check"/>
             <ComboBoxItem Content="caret"/>
             <ComboBoxItem Content="zigzag"/>
             <ComboBoxItem Content="arrow"/>
             <ComboBoxItem Content="star"/>
+            <ComboBoxItem Content="z"/>
             <ComboBoxItem Content="w"/>
             <ComboBoxItem Content="double_arch"/>
             <ComboBoxItem Content="mu"/>

@@ -164,7 +164,7 @@ namespace ActionVisualizer
 
             Log = new GestureTests.Logger("ActionVisualizer");            
             JK = new JackKnife();
-            JK.InitializeFromSingleUser(GestureTests.Config.DataPath, userDirectory.Text, false);
+            //JK.InitializeFromSingleUser(GestureTests.Config.DataPath, userDirectory.Text, false);
             //JK.InitializeFromFolder(GestureTests.Config.DataPath);
         }
 

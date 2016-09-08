@@ -75,7 +75,7 @@ namespace ActionVisualizer
             }
             Normalize();
         }
-        public void InitializeFromSingleUser(string path, string uname)
+        public void InitializeFromSingleUser(string path, string uname, bool useOnlyTwo)
         {
             List<UserDataSet> alldata = DataLoader.LoadGestureDataFrom(path);
             foreach (UserDataSet ud in alldata)
@@ -95,9 +95,9 @@ namespace ActionVisualizer
             }
 
             all_templates = templates;
-            //select first and last of each gname           
-            templates = all_templates.GroupBy(x => x.gname).Select(x => x.First()).Union(all_templates.GroupBy(x => x.gname).Select(x => x.Last())).ToList();
-
+            if(useOnlyTwo)
+                //select first and last of each gname           
+                templates = all_templates.GroupBy(x => x.gname).Select(x => x.First()).Union(all_templates.GroupBy(x => x.gname).Select(x => x.Last())).ToList();            
             //select first of each gname
             //templates = all_templates.GroupBy(x => x.gname).Select(x => x.First()).ToList();
 
@@ -530,6 +530,7 @@ namespace ActionVisualizer
         {
             gname = label;
             raw_pts = temp;
+            //pts = SmoothEveryFrame(Resample(temp, resample_cnt));
             pts = Resample(temp, resample_cnt);
             vecs = new List<Vector<float>>();
             for (int ii = 1; ii < pts.Count; ii++)
@@ -590,6 +591,30 @@ namespace ActionVisualizer
             }
             while (ret.Count < n)
                 ret.Add(points.Last());
+            return ret;
+        }
+
+        private List<Vector<float>> SmoothEveryFrame(List<Vector<float>> pts)
+        {
+            var ret = new List<Vector<float>>();
+            foreach (var pt in pts)
+                ret.Add(SmoothFrame(pt));
+            return ret;
+        }
+        private Vector<float> SmoothFrame(Vector<float> temp)
+        {
+            Vector<float> ret = Vector<float>.Build.DenseOfVector(temp);
+            if (ret.Count < 5)
+                return ret;
+
+            ret[0] = (temp[0] + temp[1] + temp[2])/3;
+            ret[1] = (temp[0] + temp[1] + temp[2] + temp[3]) / 4;
+            ret[temp.Count - 1] = (temp[temp.Count - 1] + temp[temp.Count - 2] + temp[temp.Count - 3]) / 3;
+            ret[temp.Count - 2] = (temp[temp.Count - 1] + temp[temp.Count - 2] + temp[temp.Count - 3] + temp[temp.Count - 4]) / 4;
+
+            for (int ii = 2; ii < temp.Count - 2; ii++)
+                ret[ii] = (temp[ii-2] + temp[ii-1] + temp[ii] + temp[ii+1] + temp[ii + 2]) / 5;
+
             return ret;
         }
 

@@ -164,7 +164,7 @@ namespace ActionVisualizer
 
             Log = new GestureTests.Logger("ActionVisualizer");            
             JK = new JackKnife();
-            JK.InitializeFromSingleUser(GestureTests.Config.DataPath, userDirectory.Text);
+            JK.InitializeFromSingleUser(GestureTests.Config.DataPath, userDirectory.Text, false);
             //JK.InitializeFromFolder(GestureTests.Config.DataPath);
         }
 
@@ -943,7 +943,7 @@ namespace ActionVisualizer
             GestureTests.Config.DataPath = @"..\..\..\data6D\";
             GestureTests.Config.Use3DMode = true;
             JK = new JackKnife();
-            JK.InitializeFromSingleUser(GestureTests.Config.DataPath, userDirectory.Text);            
+            JK.InitializeFromSingleUser(GestureTests.Config.DataPath, userDirectory.Text, useOnlyTwo.IsChecked.Value);            
         }
 
         private void use3DGestures_Unchecked(object sender, RoutedEventArgs e)
@@ -951,7 +951,7 @@ namespace ActionVisualizer
             GestureTests.Config.DataPath = @"..\..\..\data\";
             GestureTests.Config.Use3DMode = false;
             JK = new JackKnife();
-            JK.InitializeFromSingleUser(GestureTests.Config.DataPath, userDirectory.Text);           
+            JK.InitializeFromSingleUser(GestureTests.Config.DataPath, userDirectory.Text, useOnlyTwo.IsChecked.Value);           
         }
         
     }

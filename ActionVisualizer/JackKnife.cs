@@ -84,7 +84,8 @@ namespace ActionVisualizer
                 {
                     foreach (GestureSample gs in ud.TrainingSamples)
                     {
-
+                        //if (gs.Gesture == GestureType.mu || gs.Gesture == GestureType.q)
+                        //    continue;
                         List<Vector<float>> data = new List<Vector<float>>();
                         foreach (var rd in gs.RawData)
                             data.Add(Vector<float>.Build.DenseOfArray(rd));

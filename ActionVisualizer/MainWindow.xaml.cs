@@ -803,6 +803,11 @@ namespace ActionVisualizer
                 JK.EvaluateUserDependent(GestureTests.Config.DataPath, userDirectory.Text);
             }
 
+            if(e.Key == Key.T)
+            {
+                JK.EvaluateUserDependentPairwiseSpeakers(GestureTests.Config.DataPath, userDirectory.Text);
+            }
+
             if (e.Key == Key.M)
             {
                 generateAllGestureStrokes();

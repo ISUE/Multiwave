@@ -229,6 +229,127 @@ namespace ActionVisualizer
 
         }
 
+
+        public void EvaluateUserDependentPairwiseSpeakers(string path, string uname)
+        {
+            List<UserDataSet> alldata = DataLoader.LoadGestureDataFrom(path);
+            var temp = templates;
+            Console.WriteLine("CrossValidate\t\t2D\t\t3D\t\tAll");
+            var l2de = new List<float>();
+            var l3de = new List<float>();
+            var le = new List<float>();
+            var cnt = alldata[0].TrainingSamples[0].RawData[0].Count() / 33;
+            for (int mm = 0; mm < cnt; mm++)
+            {
+                for (int nn = mm + 1; nn < cnt; nn++)
+                {
+                    foreach (UserDataSet ud in alldata)
+                    {
+                        if (uname == "" || ud.Path.Contains(uname))
+                        {
+                            templates.Clear();
+                            foreach (GestureSample gs in ud.TrainingSamples)
+                            {
+                                if (gs.Gesture == GestureType.mu || gs.Gesture == GestureType.p || gs.Gesture == GestureType.q || gs.Gesture == GestureType.circle)
+                                    continue;
+                                List<Vector<float>> data = new List<Vector<float>>();
+                                foreach (var rd in gs.RawData)
+                                {
+                                    var first = rd.Skip(mm * 33).Take(33).ToArray();
+                                    var second = rd.Skip(nn * 33).Take(33).ToArray();
+                                    var max = Math.Max(first.Max(), second.Max());
+                                    var merged = first.Concat(second).Select(x => x / max);
+                                    data.Add(Vector<float>.Build.DenseOfArray(merged.ToArray()));
+                                }
+                                Add(data, gs.Gesture.ToString());
+                            }
+
+                            Normalize();
+
+                            float errors = 0, errors_2D = 0, errors_3D = 0;
+                            List<Gesture> original = templates;
+                            List<Gesture> only2D = original.FindAll(x => x.Is2D() == true);
+                            List<Gesture> only3D = original.FindAll(x => x.Is2D() == false);
+
+                            templates = only2D;
+                            for (int ii = 0; ii < templates.Count; ii++)
+                            {
+                                Gesture candidate = templates[ii];
+                                templates.RemoveAt(ii);
+
+                                var result = Classify(candidate);
+                                if (result.template == null)
+                                {
+                                    errors_2D++;
+                                    templates.Insert(ii, candidate);
+                                    continue;
+                                }
+                                else if (result.template.gname != candidate.gname)
+                                {
+                                    errors_2D++;
+                                }
+                                templates.Insert(ii, candidate);
+                            }
+
+                            templates = only3D;
+                            for (int ii = 0; ii < templates.Count; ii++)
+                            {
+                                Gesture candidate = templates[ii];
+                                templates.RemoveAt(ii);
+
+                                var result = Classify(candidate);
+                                if (result.template == null)
+                                {
+                                    errors_3D++;
+                                    templates.Insert(ii, candidate);
+                                    continue;
+                                }
+                                else if (result.template.gname != candidate.gname)
+                                {
+                                    errors_3D++;
+                                }
+                                templates.Insert(ii, candidate);
+                            }
+
+                            templates = original;
+
+                            for (int ii = 0; ii < templates.Count; ii++)
+                            {
+                                Gesture candidate = templates[ii];
+                                templates.RemoveAt(ii);
+
+                                var result = Classify(candidate);
+                                if (result.template == null)
+                                {
+                                    errors++;
+                                    templates.Insert(ii, candidate);
+                                    continue;
+                                }
+                                else if (result.template.gname != candidate.gname)
+                                {
+                                    errors++;
+                                }
+                                templates.Insert(ii, candidate);
+                            }
+                            errors = errors / templates.Count;
+                            errors_2D = errors_2D / only2D.Count;
+                            errors_3D = errors_3D / only3D.Count;
+
+                            l2de.Add(errors_2D);
+                            l3de.Add(errors_3D);
+                            le.Add(errors);
+
+                            templates.Clear();
+                        }
+                    }
+                    templates = temp;
+                    Console.WriteLine("Average\t" + (mm+1) + " " + (nn+1) + " "  + l2de.Average().ToString("0.00") + "\t" + l3de.Average().ToString("0.00") + "\t" + le.Average().ToString("0.00"));
+                }
+            }           
+
+        }
+        
+
         public float CrossValidateDataset()
         {
             float errors = 0;

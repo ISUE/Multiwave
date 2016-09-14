@@ -399,6 +399,8 @@ namespace ActionVisualizer
                 for (int jj = Math.Max(1, ii - r); jj < Math.Min(m, ii + r); jj++)
                 {
                     float cost = 1-candidate[ii - 1].DotProduct(template[jj - 1]);
+                    //var d = candidate[ii - 1].Subtract(template[jj - 1]);
+                    //float cost = d.PointwiseMultiply(d).Sum();
                     float min = Math.Min(dtw[ii - 1, jj], Math.Min(dtw[ii, jj - 1], dtw[ii - 1, jj - 1]));
                     dtw[ii, jj] = cost + min;
                 }

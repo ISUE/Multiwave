@@ -623,7 +623,7 @@ namespace ActionVisualizer
                         var best = results.OrderByDescending(item => item.score).Last();
 
                         //Console.WriteLine(best.pruned_by_best_score + " " + best.pruned_by_rejection + " " + best.tests);
-                        Console.WriteLine((best.template != null ? best.template.gname : "Nothing") + " " + best.score);
+                        //Console.WriteLine((best.template != null ? best.template.gname : "Nothing") + " " + best.score);
 
 
                         if (best.template == null || best.score > thresh * Gesture.resample_cnt || (prev2 != prev || prev != best.template.gname || prev2 != best.template.gname))

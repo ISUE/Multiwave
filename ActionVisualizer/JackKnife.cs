@@ -75,6 +75,7 @@ namespace ActionVisualizer
             }
             Normalize();
         }
+
         public void InitializeFromSingleUser(string path, string uname, bool useOnlyTwo)
         {
             List<UserDataSet> alldata = DataLoader.LoadGestureDataFrom(path);
@@ -106,6 +107,126 @@ namespace ActionVisualizer
             //templates = all_templates.GroupBy(x => x.gname).OrderBy(x => Guid.NewGuid()).FirstOrDefault().ToList();
 
             Normalize();
+        }
+
+        public void EvaluateUserDependent(string path, string uname)
+        {
+            List<UserDataSet> alldata = DataLoader.LoadGestureDataFrom(path);
+            var temp = templates;
+            Console.WriteLine("CrossValidate\t\t2D\t\t3D\t\tAll");
+            var l2de = new List<float>();
+            var l3de = new List<float>();
+            var le = new List<float>();
+
+            var count_map = new Dictionary<Tuple<string,string>, int>();
+            foreach (UserDataSet ud in alldata)
+            {
+                if (uname == "" || ud.Path.Contains(uname))
+                {
+                    templates.Clear();
+                    foreach (GestureSample gs in ud.TrainingSamples)
+                    {
+                        if (gs.Gesture == GestureType.mu || gs.Gesture == GestureType.p || gs.Gesture == GestureType.q || gs.Gesture == GestureType.circle)
+                            continue;
+                        List<Vector<float>> data = new List<Vector<float>>();
+                        foreach (var rd in gs.RawData)
+                            data.Add(Vector<float>.Build.DenseOfArray(rd));
+                        Add(data, gs.Gesture.ToString());
+                    }
+
+                    Normalize();
+
+                    float errors = 0, errors_2D = 0, errors_3D = 0;
+                    List<Gesture> original = templates;
+                    List<Gesture> only2D = original.FindAll(x => x.Is2D() == true);
+                    List<Gesture> only3D = original.FindAll(x => x.Is2D() == false);
+
+                    templates = only2D;
+                    for (int ii = 0; ii < templates.Count; ii++)
+                    {
+                        Gesture candidate = templates[ii];
+                        templates.RemoveAt(ii);
+
+                        var result = Classify(candidate);
+                        if (result.template == null)
+                        {
+                            errors_2D++;
+                            templates.Insert(ii, candidate);
+                            continue;
+                        }
+                        else if (result.template.gname != candidate.gname)
+                        {                            
+                            errors_2D++;
+                        }
+                        count_map[Tuple.Create(candidate.gname, result.template.gname)] = count_map.ContainsKey(Tuple.Create(candidate.gname, result.template.gname))
+                            ? count_map[Tuple.Create(candidate.gname, result.template.gname)]+1 : 1;
+                        templates.Insert(ii, candidate);
+                    }
+
+                    templates = only3D;
+                    for (int ii = 0; ii < templates.Count; ii++)
+                    {
+                        Gesture candidate = templates[ii];
+                        templates.RemoveAt(ii);
+
+                        var result = Classify(candidate);
+                        if (result.template == null)
+                        {
+                            errors_3D++;
+                            templates.Insert(ii, candidate);
+                            continue;
+                        }
+                        else if (result.template.gname != candidate.gname)
+                        {
+                            errors_3D++;
+                        }
+                        count_map[Tuple.Create(candidate.gname, result.template.gname)] = count_map.ContainsKey(Tuple.Create(candidate.gname, result.template.gname))
+                            ? count_map[Tuple.Create(candidate.gname, result.template.gname)]+1 : 1;
+                        templates.Insert(ii, candidate);
+                    }
+
+                    templates = original;
+
+                    for (int ii = 0; ii < templates.Count; ii++)
+                    {
+                        Gesture candidate = templates[ii];
+                        templates.RemoveAt(ii);
+
+                        var result = Classify(candidate);
+                        if (result.template == null)
+                        {
+                            errors++;
+                            templates.Insert(ii, candidate);
+                            continue;
+                        }
+                        else if (result.template.gname != candidate.gname)
+                        {                           
+                            errors++;
+                        }
+                        count_map[Tuple.Create(candidate.gname, result.template.gname)] = count_map.ContainsKey(Tuple.Create(candidate.gname, result.template.gname))
+                            ? count_map[Tuple.Create(candidate.gname, result.template.gname)]+1 : 1;
+                        templates.Insert(ii, candidate);
+                    }
+                    errors = errors / templates.Count;
+                    errors_2D = errors_2D / only2D.Count;
+                    errors_3D = errors_3D / only3D.Count;
+
+                    l2de.Add(errors_2D);
+                    l3de.Add(errors_3D);
+                    le.Add(errors);
+
+                    Console.WriteLine(ud.Path + "\t" + errors_2D.ToString("0.00") + "\t" + errors_3D.ToString("0.00") + "\t" + errors.ToString("0.00"));                    
+                    templates.Clear();
+                }
+            }            
+            templates = temp;
+            Console.WriteLine("Average\t" + l2de.Average().ToString("0.00") + "\t" + l3de.Average().ToString("0.00") + "\t" + le.Average().ToString("0.00"));
+            foreach (var key in count_map.OrderBy(x => x.Value))
+            {
+                if (key.Value > 0)
+                    Console.WriteLine(key);
+            }
+
         }
 
         public float CrossValidateDataset()

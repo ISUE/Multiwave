@@ -798,6 +798,11 @@ namespace ActionVisualizer
                 //Console.WriteLine("Error Rate of Dataset: " + JK.CrossValidateDataset());
             }
 
+            if(e.Key == Key.R)
+            {
+                JK.EvaluateUserDependent(GestureTests.Config.DataPath, userDirectory.Text);
+            }
+
             if (e.Key == Key.M)
             {
                 generateAllGestureStrokes();

@@ -158,8 +158,8 @@ namespace ActionVisualizer
                         {                            
                             errors_2D++;
                         }
-                        count_map[Tuple.Create(candidate.gname, result.template.gname)] = count_map.ContainsKey(Tuple.Create(candidate.gname, result.template.gname))
-                            ? count_map[Tuple.Create(candidate.gname, result.template.gname)]+1 : 1;
+                        //count_map[Tuple.Create(candidate.gname, result.template.gname)] = count_map.ContainsKey(Tuple.Create(candidate.gname, result.template.gname))
+                        //    ? count_map[Tuple.Create(candidate.gname, result.template.gname)]+1 : 1;
                         templates.Insert(ii, candidate);
                     }
 
@@ -180,8 +180,8 @@ namespace ActionVisualizer
                         {
                             errors_3D++;
                         }
-                        count_map[Tuple.Create(candidate.gname, result.template.gname)] = count_map.ContainsKey(Tuple.Create(candidate.gname, result.template.gname))
-                            ? count_map[Tuple.Create(candidate.gname, result.template.gname)]+1 : 1;
+                        //count_map[Tuple.Create(candidate.gname, result.template.gname)] = count_map.ContainsKey(Tuple.Create(candidate.gname, result.template.gname))
+                        //    ? count_map[Tuple.Create(candidate.gname, result.template.gname)]+1 : 1;
                         templates.Insert(ii, candidate);
                     }
 
@@ -221,7 +221,7 @@ namespace ActionVisualizer
             }            
             templates = temp;
             Console.WriteLine("Average\t" + l2de.Average().ToString("0.00") + "\t" + l3de.Average().ToString("0.00") + "\t" + le.Average().ToString("0.00"));
-            foreach (var key in count_map.OrderBy(x => x.Value))
+            foreach (var key in count_map.OrderBy(x => x.Key.Item1).ThenBy(x => x.Key.Item2))
             {
                 if (key.Value > 0)
                     Console.WriteLine(key);
@@ -598,13 +598,13 @@ namespace ActionVisualizer
                 if (fscore > template.rejection_threshold)
                 {
                     ret.pruned_by_rejection += 1.0f;
-                    continue;
+                    //continue;
                 }
 
                 if (fscore > ret.score)
                 {
                     ret.pruned_by_best_score += 1.0f;
-                    continue;
+                    //continue;
                 }
 
                 float score = DTW_Distance(
@@ -612,8 +612,8 @@ namespace ActionVisualizer
                     template.vecs,
                     Gesture.r);
 
-                if (score >= template.rejection_threshold)
-                    continue;
+               // if (score >= template.rejection_threshold)
+               //     continue;
 
                 score *= template.fscore;
                 if (score < ret.score)
